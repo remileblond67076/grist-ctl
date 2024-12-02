@@ -5,7 +5,7 @@
 Mettre en place un fichier `.end` contenant les informations suivantes :
 
 ```
-TOKEN="clef de session"
+GRIST_TOKEN="clef de session"
 GRIST_URL="https://wpgrist.cus.fr"
 ```
 

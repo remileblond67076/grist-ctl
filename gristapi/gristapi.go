@@ -70,7 +70,7 @@ func get(myRequest string) string {
 	client := &http.Client{}
 
 	url := fmt.Sprintf("%s/api/%s", os.Getenv("GRIST_URL"), myRequest)
-	bearer := "Bearer " + os.Getenv("TOKEN")
+	bearer := "Bearer " + os.Getenv("GRIST_TOKEN")
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -188,7 +188,7 @@ func DisplayDoc(docId string) {
 	}
 
 	title := color.New(color.FgRed).SprintFunc()
-	fmt.Printf("\nDocument '%s' (%s)", title(doc.Name), doc.Id)
+	fmt.Printf("\nDocument %s (%s)", title(doc.Name), doc.Id)
 	if doc.IsPinned {
 		fmt.Printf(" - épinglé\n")
 	} else {
@@ -227,7 +227,7 @@ func DisplayDoc(docId string) {
 	wg.Wait()
 	var details []string
 	for _, table_details := range tables_details {
-		ligne := fmt.Sprintf("- \"%s\" : %d lignes, %d colonnes\n", table_details.name, table_details.nb_rows, table_details.nb_cols)
+		ligne := fmt.Sprintf("- %s : %d lignes, %d colonnes\n", title(table_details.name), table_details.nb_rows, table_details.nb_cols)
 		for _, col_name := range table_details.cols_names {
 			ligne = ligne + fmt.Sprintf("  - %s\n", col_name)
 		}
