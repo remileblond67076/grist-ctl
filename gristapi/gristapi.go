@@ -16,6 +16,19 @@ import (
 	"github.com/joho/godotenv"
 )
 
+type User struct {
+	Id           string `json:"id"`
+	Name         string `json:"name"`
+	Email        string `json:"email"`
+	Access       string `json:"access"`
+	ParentAccess string `json:"parentAccess"`
+}
+
+type UserAccess struct {
+	MaxInheritedRole string `json:"maxInheritedRole"`
+	Users            []User `json:"users"`
+}
+
 type Org struct {
 	Id        int    `json:"id"`
 	Name      string `json:"name"`
@@ -263,6 +276,27 @@ func DisplayOrg(orgId string) {
 			for _, doc := range lst_docs {
 				fmt.Printf("    - %s\n", doc)
 			}
+		}
+	}
+}
+
+func GetDocAccess(docId string) UserAccess {
+	// Retourne la liste des utilisateurs ayant accès au document
+	var lstUsers UserAccess
+	response := get("docs/" + docId + "/access")
+	json.Unmarshal([]byte(response), &lstUsers)
+	return lstUsers
+}
+
+func DisplayDocAccess(docId string) {
+	doc := GetDoc(docId)
+	fmt.Printf("\nDocument \"%s\"\n\n", doc.Name)
+	docAccess := GetDocAccess(docId)
+	fmt.Printf("Niveau d'héritage : %s\n", docAccess.MaxInheritedRole)
+	fmt.Printf("\n%d utilisateurs, dont les suivants ne sont pas hérités:\n", len(docAccess.Users))
+	for _, user := range docAccess.Users {
+		if user.Access != "" {
+			fmt.Printf("- %s, %s (%s)\n", user.Email, user.Name, user.Access)
 		}
 	}
 }
