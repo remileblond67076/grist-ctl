@@ -106,6 +106,7 @@ func GetOrg(idOrg string) Org {
 }
 
 func GetOrgWorkspaces(id int) []Workspace {
+	// Récupère les information sur un Workspace particulier
 	lstWorkspaces := []Workspace{}
 	response := get("orgs/" + strconv.Itoa(id) + "/workspaces")
 	json.Unmarshal([]byte(response), &lstWorkspaces)
@@ -122,7 +123,7 @@ func GetWorkspaceDocs(idWorkspace int) []Doc {
 }
 
 func GetDoc(id string) Doc {
-	// Récupère un document
+	// Récupère les informations relatives à un document particulier
 	doc := Doc{}
 	url := "docs/" + id
 	response := get(url)
@@ -140,9 +141,10 @@ func GetDocTables(id string) Tables {
 	return tables
 }
 
-func getTableColumns(docId string, columnId string) TableColumns {
+func getTableColumns(docId string, tableId string) TableColumns {
+	// Récupère la liste des colonnes d'une table
 	columns := TableColumns{}
-	url := "docs/" + docId + "/tables/" + columnId + "/columns"
+	url := "docs/" + docId + "/tables/" + tableId + "/columns"
 	response := get(url)
 	json.Unmarshal([]byte(response), &columns)
 
@@ -150,6 +152,7 @@ func getTableColumns(docId string, columnId string) TableColumns {
 }
 
 func GetTableRows(docId string, tableId string) TableRows {
+	// Récupère les données d'une table
 	rows := TableRows{}
 	url := "docs/" + docId + "/tables/" + tableId + "/data"
 	response := get(url)
@@ -228,6 +231,7 @@ func DisplayDoc(docId string) {
 }
 
 func DisplayOrgs() {
+	// Affiche la liste des organisations accessibles
 	for _, org := range GetOrgs() {
 		fmt.Printf("- Org n°%d (%s)\n", org.Id, org.Name)
 	}
