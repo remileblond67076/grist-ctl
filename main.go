@@ -6,16 +6,9 @@ import (
 	"os"
 
 	"grist-cli/gristapi"
-
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalf("Erreur lors de la lecture du fichier de configuration\n", err)
-	}
-
 	args := os.Args[1:]
 	if len(args) < 2 {
 		log.Fatal("Merci de passer des arguments")

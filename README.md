@@ -1,4 +1,4 @@
-# GRIST-cli : exploitation de l'API
+# GRIST-cli : exploitation de l'API GRIST
 
 ## Configuration
 
@@ -6,6 +6,7 @@ Mettre en place un fichier `.end` contenant les informations suivantes :
 
 ```
 TOKEN="clef de session"
+GRIST_URL="https://wpgrist.cus.fr"
 ```
 
 ## Usage

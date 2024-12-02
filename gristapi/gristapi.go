@@ -13,6 +13,7 @@ import (
 	"sync"
 
 	"github.com/fatih/color"
+	"github.com/joho/godotenv"
 )
 
 type Org struct {
@@ -58,9 +59,17 @@ type TableRows struct {
 func get(myRequest string) string {
 	// Envoi d'une requête HTTP GET à l'API REST de Grist
 	// Retourne le corps de la réponse
+
+	if os.Getenv("GRIST_TOKEN") == "" || os.Getenv("GRIST_URL") == "" {
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Fatalf("Erreur lors de la lecture du fichier de configuration\n", err)
+		}
+	}
+
 	client := &http.Client{}
 
-	url := "https://wpgrist.cus.fr/api/" + myRequest
+	url := fmt.Sprintf("%s/api/%s", os.Getenv("GRIST_URL"), myRequest)
 	bearer := "Bearer " + os.Getenv("TOKEN")
 
 	req, err := http.NewRequest("GET", url, nil)
