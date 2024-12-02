@@ -1,4 +1,4 @@
-# GRIST : exploitation de l'API
+# GRIST-cli : exploitation de l'API
 
 ## Configuration
 
@@ -6,6 +6,12 @@ Mettre en place un fichier `.end` contenant les informations suivantes :
 
 ```
 TOKEN="clef de session"
-ORGID=3
-DOCID="id du document à analyser"
 ```
+
+## Usage
+
+Liste des commandes utilisables :
+
+- `grist-cli get org` : liste des organisations
+- `grist-cli get org <id>` : détails d'une organisation
+- `grist-cli get doc <id>` : détails d'un document

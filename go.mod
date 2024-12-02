@@ -1,4 +1,4 @@
-module rest-test
+module grist-cli
 
 go 1.23.3
 
