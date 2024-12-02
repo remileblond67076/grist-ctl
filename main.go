@@ -63,7 +63,11 @@ func main() {
 				switch arg2 := args[1]; arg2 {
 				case "doc":
 					{
-
+						if len(os.Args) == 4 {
+							docId := os.Args[3]
+							fmt.Printf("Purge du document %s\n", docId)
+							gristapi.PurgeDoc(docId)
+						}
 					}
 				}
 			}

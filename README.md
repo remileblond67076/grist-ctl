@@ -17,3 +17,4 @@ Liste des commandes utilisables :
 - `grist-cli get org <id>` : détails d'une organisation
 - `grist-cli get doc <id>` : détails d'un document
 - `grist-cli get doc <id> access` : liste des droits d'accès au document
+- `grist-cli purge doc <id>`: purge l'historique d'un document (conserve les 3 dernières opérations)

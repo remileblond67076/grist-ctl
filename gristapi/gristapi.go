@@ -1,6 +1,7 @@
 package gristapi
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -69,16 +70,19 @@ type TableRows struct {
 	Id []uint `json:"id"`
 }
 
-func get(myRequest string) string {
-	// Envoi d'une requête HTTP GET à l'API REST de Grist
-	// Retourne le corps de la réponse
-
+func initEnv() {
 	if os.Getenv("GRIST_TOKEN") == "" || os.Getenv("GRIST_URL") == "" {
 		err := godotenv.Load(".env")
 		if err != nil {
 			log.Fatalf("Erreur lors de la lecture du fichier de configuration\n", err)
 		}
 	}
+}
+
+func get(myRequest string) string {
+	// Envoi d'une requête HTTP GET à l'API REST de Grist
+	// Retourne le corps de la réponse
+	initEnv()
 
 	client := &http.Client{}
 
@@ -109,6 +113,41 @@ func get(myRequest string) string {
 		log.Fatal("Error reading response: %s", err)
 	}
 	return string(body)
+}
+
+func post(myRequest string, data []byte) string {
+	// Envoi d'une requête HTTP POST à l'API REST de Grist avec une charge de données
+	// Retourne le corps de la réponse
+	initEnv()
+	client := &http.Client{}
+	url := fmt.Sprintf("%s/api/%s", os.Getenv("GRIST_URL"), myRequest)
+	bearer := "Bearer " + os.Getenv("GRIST_TOKEN")
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	if err != nil {
+		log.Fatal("Error creating request: %s", err)
+	}
+	req.Header.Add("Authorization", bearer)
+
+	// Send the HTTP request
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal("Error sending request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	// Check the HTTP status code
+	if resp.StatusCode != http.StatusOK {
+		log.Fatal("HTTP Error: %s", resp.Status)
+	}
+
+	// Read the HTTP response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal("Error reading response: %s", err)
+	}
+	return string(body)
+
 }
 
 func GetOrgs() []Org {
@@ -299,4 +338,11 @@ func DisplayDocAccess(docId string) {
 			fmt.Printf("- %s, %s (%s)\n", user.Email, user.Name, user.Access)
 		}
 	}
+}
+
+func PurgeDoc(docId string) {
+	url := "docs/" + docId + "/states/remove"
+	data := []byte(`{"keep": "3"}`)
+	response := post(url, data)
+	println(response)
 }
