@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strconv"
 	"sync"
+	"text/tabwriter"
 
 	"github.com/fatih/color"
 	"github.com/joho/godotenv"
@@ -295,30 +296,38 @@ func DisplayDoc(docId string) {
 
 func DisplayOrgs() {
 	// Affiche la liste des organisations accessibles
+	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
+
+	fmt.Fprintln(w, "Id\tNom")
 	for _, org := range GetOrgs() {
-		fmt.Printf("- Org n°%d (%s)\n", org.Id, org.Name)
+		fmt.Fprintf(w, "%d\t%s\n", org.Id, org.Name)
 	}
+	w.Flush()
 }
 
 func DisplayOrg(orgId string) {
 	// Affiche les détails sur une organisation
+
 	org := GetOrg(orgId)
 	fmt.Printf("Organisation n°%d : %s\n", org.Id, org.Name)
 	worskspaces := GetOrgWorkspaces(org.Id)
-	fmt.Printf("  %d workspaces : \n", len(worskspaces))
+	fmt.Printf("%d workspaces, dont ceux-ci contiennent au moins un document:\n", len(worskspaces))
+
+	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
+	fmt.Fprintln(w, "Id workspace\tNom Workspace\tId doc\tNom doc")
 	for _, ws := range worskspaces {
 		if len(ws.Docs) > 0 {
 			var lst_docs []string
 			for _, doc := range ws.Docs {
-				lst_docs = append(lst_docs, fmt.Sprintf("%s (%s)", doc.Name, doc.Id))
+				lst_docs = append(lst_docs, fmt.Sprintf("%s\t%s", doc.Id, doc.Name))
 			}
 			slices.Sort(lst_docs)
-			fmt.Printf("  - \"%s\" (n°%d), %d documents:\n", ws.Name, ws.Id, len(ws.Docs))
 			for _, doc := range lst_docs {
-				fmt.Printf("    - %s\n", doc)
+				fmt.Fprintf(w, "%d\t%s\t%s\n", ws.Id, ws.Name, doc)
 			}
 		}
 	}
+	w.Flush()
 }
 
 func GetDocAccess(docId string) UserAccess {
@@ -335,11 +344,14 @@ func DisplayDocAccess(docId string) {
 	docAccess := GetDocAccess(docId)
 	fmt.Printf("Niveau d'héritage : %s\n", docAccess.MaxInheritedRole)
 	fmt.Printf("\n%d utilisateurs, dont les suivants ne sont pas hérités:\n", len(docAccess.Users))
+	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
+	fmt.Fprintln(w, "Email\tNom\tAccès")
 	for _, user := range docAccess.Users {
 		if user.Access != "" {
-			fmt.Printf("- %s, %s (%s)\n", user.Email, user.Name, user.Access)
+			fmt.Fprintf(w, "%s\t%s\t%s\n", user.Email, user.Name, user.Access)
 		}
 	}
+	w.Flush()
 }
 
 func PurgeDoc(docId string) {
