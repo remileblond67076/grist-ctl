@@ -4,9 +4,9 @@
 
 Mettre en place un fichier `.end` contenant les informations suivantes :
 
-```
+```ini
 GRIST_TOKEN="clef de session"
-GRIST_URL="https://wpgrist.cus.fr"
+GRIST_URL="https://<url du serveur GRIST avant /api>"
 ```
 
 ## Usage
@@ -20,3 +20,27 @@ Liste des commandes utilisables :
 - `grist-cli purge doc <id>`: purge l'historique d'un document (conserve les 3 dernières opérations)
 - `grist-cli get workspace <id>`: détails sur un workspace
 - `grist-cli get workspace <id> access`: liste des droits d'accès à un workspace
+
+## Intégration
+
+### Tests unitaires
+
+Lancement des tests unitaires à l'aide de la commande suivante :
+
+```bash
+go test .
+```
+
+### Compilation
+
+Pour construire les binaires pour la plateforme de développement, utiliser la commande suivante :
+
+```bash
+go build .
+```
+
+Pour construire les binaires pour Windows :
+
+```bash
+GOOS=windows GOARCH=amd64 go build .
+```

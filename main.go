@@ -59,6 +59,8 @@ func main() {
 								docId := args[2]
 								gristapi.DisplayDocAccess(docId)
 							}
+						default:
+							help()
 						}
 					}
 				case "workspace":

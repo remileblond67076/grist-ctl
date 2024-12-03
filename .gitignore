@@ -2,3 +2,4 @@ main
 go.sum
 .env
 grist-cli
+grist-cli.exe
