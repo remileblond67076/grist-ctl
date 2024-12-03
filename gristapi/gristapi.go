@@ -45,12 +45,20 @@ type Workspace struct {
 	Docs               []Doc  `json:"docs"`
 	IsSupportWorkspace string `json:"isSupportWorkspace"`
 	OrgDomain          string `json:"orgDomain"`
+	Org                Org    `json:"org"`
+	Access             string `json:"access"`
+}
+
+type WorkspaceAccess struct {
+	MaxInheritedRole string `json:"maxInheritedRole"`
+	Users            []User `json:"users"`
 }
 
 type Doc struct {
-	Id       string `json:"id"`
-	Name     string `json:"name"`
-	IsPinned bool   `json:"isPinned"`
+	Id        string    `json:"id"`
+	Name      string    `json:"name"`
+	IsPinned  bool      `json:"isPinned"`
+	Workspace Workspace `json:"workspace"`
 }
 
 type Table struct {
@@ -94,26 +102,26 @@ func get(myRequest string) string {
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Fatal("Error creating request: %s", err)
+		log.Fatal("Error creating request %s: %s", url, err)
 	}
 	req.Header.Add("Authorization", bearer)
 
 	// Send the HTTP request
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("Error sending request: %s", err)
+		log.Fatal("Error sending request %s: %s", url, err)
 	}
 	defer resp.Body.Close()
 
 	// Check the HTTP status code
 	if resp.StatusCode != http.StatusOK {
-		log.Fatal("HTTP Error: %s", resp.Status)
+		log.Fatal("HTTP Error %s: %s", url, resp.Status)
 	}
 
 	// Read the HTTP response body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal("Error reading response: %s", err)
+		log.Fatal("Error reading response %s: %s", url, err)
 	}
 	return string(body)
 }
@@ -128,26 +136,26 @@ func post(myRequest string, data []byte) string {
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	if err != nil {
-		log.Fatal("Error creating request: %s", err)
+		log.Fatal("Error creating request %s: %s", url, err)
 	}
 	req.Header.Add("Authorization", bearer)
 
 	// Send the HTTP request
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("Error sending request: %s", err)
+		log.Fatal("Error sending request %s: %s", url, err)
 	}
 	defer resp.Body.Close()
 
 	// Check the HTTP status code
 	if resp.StatusCode != http.StatusOK {
-		log.Fatal("HTTP Error: %s", resp.Status)
+		log.Fatal("HTTP Error %s: %s", url, resp.Status)
 	}
 
 	// Read the HTTP response body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal("Error reading response: %s", err)
+		log.Fatal("Error reading response %s: %s", url, err)
 	}
 	return string(body)
 
@@ -184,6 +192,15 @@ func GetWorkspace(workspaceId int) Workspace {
 	response := get(url)
 	json.Unmarshal([]byte(response), &workspace)
 	return workspace
+}
+
+func GetWorkspaceAccess(workspaceId int) WorkspaceAccess {
+	// Récupère les droits d'accès à un workspace
+	workspaceAccess := WorkspaceAccess{}
+	url := fmt.Sprintf("workspaces/%d/access", workspaceId)
+	response := get(url)
+	json.Unmarshal([]byte(response), &workspaceAccess)
+	return workspaceAccess
 }
 
 func GetDoc(docId string) Doc {
@@ -296,10 +313,11 @@ func DisplayDoc(docId string) {
 
 func DisplayOrgs() {
 	// Affiche la liste des organisations accessibles
+	lstOrgs := GetOrgs()
+	fmt.Printf("%d organisations trouvées:\n\n", len(lstOrgs))
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
-
 	fmt.Fprintln(w, "Id\tNom")
-	for _, org := range GetOrgs() {
+	for _, org := range lstOrgs {
 		fmt.Fprintf(w, "%d\t%s\n", org.Id, org.Name)
 	}
 	w.Flush()
@@ -311,7 +329,7 @@ func DisplayOrg(orgId string) {
 	org := GetOrg(orgId)
 	fmt.Printf("Organisation n°%d : %s\n", org.Id, org.Name)
 	worskspaces := GetOrgWorkspaces(org.Id)
-	fmt.Printf("%d workspaces, dont ceux-ci contiennent au moins un document:\n", len(worskspaces))
+	fmt.Printf("%d workspaces, dont ceux-ci contiennent au moins un document:\n\n", len(worskspaces))
 
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
 	fmt.Fprintln(w, "Id workspace\tNom Workspace\tId doc\tNom doc")
@@ -330,6 +348,58 @@ func DisplayOrg(orgId string) {
 	w.Flush()
 }
 
+func DisplayWorkspace(workspaceId int) {
+	// Affiche des détails d'un Workspace
+
+	ws := GetWorkspace(workspaceId)
+	fmt.Printf("Organisation n°%d : %s\n", ws.Org.Id, ws.Org.Name)
+	fmt.Printf("Workspace n°%d : %s\n\n", ws.Id, ws.Name)
+
+	if len(ws.Docs) > 1 {
+		fmt.Printf("Contient %d documents :\n", len(ws.Docs))
+		w := tabwriter.NewWriter(os.Stdout, 1, 1, 5, ' ', 0)
+		fmt.Fprintf(w, "Id\tNom\tÉpinglé\n")
+		for _, doc := range ws.Docs {
+			pin := ""
+			if doc.IsPinned {
+				pin = "✅"
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\n", doc.Id, doc.Name, pin)
+		}
+		w.Flush()
+	} else {
+		fmt.Println("Ne contient aucun document")
+	}
+}
+
+func DisplayWorkspaceAccess(workspaceId int) {
+	// Affiche les droits d'accès à un workspace
+
+	ws := GetWorkspace((workspaceId))
+	wsa := GetWorkspaceAccess(workspaceId)
+
+	fmt.Printf("Droits d'accès au workspace n°%d : %s\n", ws.Id, ws.Name)
+	fmt.Printf("Niveau d'héritage des droits : %s\n", wsa.MaxInheritedRole)
+
+	nbUsers := len(wsa.Users)
+	if nbUsers <= 0 {
+		fmt.Println("Accessible à aucun utilisateur")
+	} else {
+		nbUser := 0
+		fmt.Println("\nAccessible utilisateurs suivants :")
+		w := tabwriter.NewWriter(os.Stdout, 5, 1, 5, ' ', 0)
+		fmt.Fprintf(w, "Nom\tEmail\tAccès direct\tAccès hérité\n")
+		for _, user := range wsa.Users {
+			if user.Access != "" || user.ParentAccess != "" {
+				fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", user.Name, user.Email, user.Access, user.ParentAccess)
+				nbUser += 1
+			}
+		}
+		w.Flush()
+		fmt.Printf("%d utilisateurs\n", nbUser)
+	}
+}
+
 func GetDocAccess(docId string) UserAccess {
 	// Retourne la liste des utilisateurs ayant accès au document
 	var lstUsers UserAccess
@@ -340,7 +410,7 @@ func GetDocAccess(docId string) UserAccess {
 
 func DisplayDocAccess(docId string) {
 	doc := GetDoc(docId)
-	fmt.Printf("\nDocument \"%s\"\n\n", doc.Name)
+	fmt.Printf("Workspace \"%s\" (n°%d) - Document \"%s\"\n", doc.Workspace.Name, doc.Workspace.Id, doc.Workspace.Name)
 	docAccess := GetDocAccess(docId)
 	fmt.Printf("Niveau d'héritage : %s\n", docAccess.MaxInheritedRole)
 	fmt.Printf("\n%d utilisateurs, dont les suivants ne sont pas hérités:\n", len(docAccess.Users))
