@@ -38,10 +38,12 @@ type Org struct {
 }
 
 type Workspace struct {
-	Id        int    `json:"id"`
-	Name      string `json:"name"`
-	CreatedAt string `json:"createdAt"`
-	Docs      []Doc  `json:"docs"`
+	Id                 int    `json:"id"`
+	Name               string `json:"name"`
+	CreatedAt          string `json:"createdAt"`
+	Docs               []Doc  `json:"docs"`
+	IsSupportWorkspace string `json:"isSupportWorkspace"`
+	OrgDomain          string `json:"orgDomain"`
 }
 
 type Doc struct {
@@ -166,43 +168,43 @@ func GetOrg(idOrg string) Org {
 	return myOrg
 }
 
-func GetOrgWorkspaces(id int) []Workspace {
-	// Récupère les information sur un Workspace particulier
+func GetOrgWorkspaces(orgId int) []Workspace {
+	// Récupère les information sur une organisation particulière
 	lstWorkspaces := []Workspace{}
-	response := get("orgs/" + strconv.Itoa(id) + "/workspaces")
+	response := get("orgs/" + strconv.Itoa(orgId) + "/workspaces")
 	json.Unmarshal([]byte(response), &lstWorkspaces)
 	return lstWorkspaces
 }
 
-func GetWorkspaceDocs(idWorkspace int) []Doc {
-	// Récupère la liste des documents contenus dans un workspace
-	lstDocs := []Doc{}
-	url := "workspaces/" + strconv.Itoa((idWorkspace)) + "/docs"
+func GetWorkspace(workspaceId int) Workspace {
+	// Récupère un workspace
+	workspace := Workspace{}
+	url := fmt.Sprintf("workspaces/%d", workspaceId)
 	response := get(url)
-	json.Unmarshal([]byte(response), &lstDocs)
-	return lstDocs
+	json.Unmarshal([]byte(response), &workspace)
+	return workspace
 }
 
-func GetDoc(id string) Doc {
+func GetDoc(docId string) Doc {
 	// Récupère les informations relatives à un document particulier
 	doc := Doc{}
-	url := "docs/" + id
+	url := "docs/" + docId
 	response := get(url)
 	json.Unmarshal([]byte(response), &doc)
 	return doc
 }
 
-func GetDocTables(id string) Tables {
+func GetDocTables(docId string) Tables {
 	// Récupère la liste des tables contenues dans un document
 	tables := Tables{}
-	url := "docs/" + id + "/tables"
+	url := "docs/" + docId + "/tables"
 	response := get(url)
 	json.Unmarshal([]byte(response), &tables)
 
 	return tables
 }
 
-func getTableColumns(docId string, tableId string) TableColumns {
+func GetTableColumns(docId string, tableId string) TableColumns {
 	// Récupère la liste des colonnes d'une table
 	columns := TableColumns{}
 	url := "docs/" + docId + "/tables/" + tableId + "/columns"
@@ -256,7 +258,7 @@ func DisplayDoc(docId string) {
 		go func() {
 			defer wg.Done()
 			table_desc := ""
-			columns := getTableColumns(docId, table.Id)
+			columns := GetTableColumns(docId, table.Id)
 			rows := GetTableRows(docId, table.Id)
 
 			var cols_names []string
