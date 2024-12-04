@@ -20,6 +20,7 @@ Liste des commandes utilisables :
 - `grist-cli purge doc <id>`: purge l'historique d'un document (conserve les 3 dernières opérations)
 - `grist-cli get workspace <id>`: détails sur un workspace
 - `grist-cli get workspace <id> access`: liste des droits d'accès à un workspace
+- `gristctl delete workspace <id>` : suppression d'un workspace
 
 ## Intégration
 

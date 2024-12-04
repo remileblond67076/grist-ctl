@@ -2,11 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 
-	"grist-cli/gristapi"
+	"gristctl/gristapi"
 )
 
 func help() {
@@ -14,20 +13,21 @@ func help() {
 GRIST : interrogation des API
 -----------------------------
 Commandes acceptées :
-- grist-cli get org : liste des organisations
-- grist-cli get org <id> : détails d'une organisation
-- grist-cli get doc <id> : détails d'un document
-- grist-cli get doc <id> access : liste des droits d'accès au document
-- grist-cli purge doc <id>: purge l'historique d'un document (conserve les 3 dernières opérations)
-- grist-cli get workspace <id>: détails sur un workspace
-- grist-cli get workspace <id> access: liste des droits d'accès à un workspace`)
+- gristctl get org : liste des organisations
+- gristctl get org <id> : détails d'une organisation
+- gristctl get doc <id> : détails d'un document
+- gristctl get doc <id> access : liste des droits d'accès au document
+- gristctl purge doc <id>: purge l'historique d'un document (conserve les 3 dernières opérations)
+- gristctl get workspace <id>: détails sur un workspace
+- gristctl get workspace <id> access: liste des droits d'accès à un workspace
+- gristctl delete workspace <id> : suppression d'un workspace`)
+	os.Exit(0)
 }
 
 func main() {
 	args := os.Args[1:]
 	if len(args) < 2 {
 		help()
-		log.Fatal("Merci de passer des arguments")
 	}
 
 	switch arg1 := args[0]; arg1 {
@@ -43,6 +43,14 @@ func main() {
 						case 3:
 							orgId := args[2]
 							gristapi.DisplayOrg(orgId)
+						case 4:
+							switch args[3] {
+							case "access":
+								orgId := args[2]
+								gristapi.DisplayOrgAccess(orgId)
+							default:
+								help()
+							}
 						default:
 							help()
 						}
@@ -96,6 +104,24 @@ func main() {
 						docId := os.Args[3]
 						fmt.Printf("Purge du document %s\n", docId)
 						gristapi.PurgeDoc(docId)
+					}
+				default:
+					help()
+				}
+			}
+		}
+	case "delete":
+		{
+			if len(args) > 2 {
+				switch arg2 := args[1]; arg2 {
+				case "workspace":
+					if len(args) == 3 {
+						arg3, err := strconv.Atoi(args[2])
+						if err == nil {
+							gristapi.DeleteWorkspace(arg3)
+						}
+					} else {
+						help()
 					}
 				default:
 					help()

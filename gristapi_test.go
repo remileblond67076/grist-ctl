@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"grist-cli/gristapi"
+	"gristctl/gristapi"
 	"testing"
 )
 

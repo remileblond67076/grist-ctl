@@ -19,16 +19,11 @@ import (
 )
 
 type User struct {
-	Id           string `json:"id"`
+	Id           int    `json:"id"`
 	Name         string `json:"name"`
 	Email        string `json:"email"`
 	Access       string `json:"access"`
 	ParentAccess string `json:"parentAccess"`
-}
-
-type UserAccess struct {
-	MaxInheritedRole string `json:"maxInheritedRole"`
-	Users            []User `json:"users"`
 }
 
 type Org struct {
@@ -49,7 +44,7 @@ type Workspace struct {
 	Access             string `json:"access"`
 }
 
-type WorkspaceAccess struct {
+type EntityAccess struct {
 	MaxInheritedRole string `json:"maxInheritedRole"`
 	Users            []User `json:"users"`
 }
@@ -81,7 +76,7 @@ type TableRows struct {
 	Id []uint `json:"id"`
 }
 
-func initEnv() {
+func init() {
 	if os.Getenv("GRIST_TOKEN") == "" || os.Getenv("GRIST_URL") == "" {
 		err := godotenv.Load(".env")
 		if err != nil {
@@ -93,8 +88,6 @@ func initEnv() {
 func get(myRequest string) string {
 	// Envoi d'une requête HTTP GET à l'API REST de Grist
 	// Retourne le corps de la réponse
-	initEnv()
-
 	client := &http.Client{}
 
 	url := fmt.Sprintf("%s/api/%s", os.Getenv("GRIST_URL"), myRequest)
@@ -129,7 +122,6 @@ func get(myRequest string) string {
 func post(myRequest string, data []byte) string {
 	// Envoi d'une requête HTTP POST à l'API REST de Grist avec une charge de données
 	// Retourne le corps de la réponse
-	initEnv()
 	client := &http.Client{}
 	url := fmt.Sprintf("%s/api/%s", os.Getenv("GRIST_URL"), myRequest)
 	bearer := "Bearer " + os.Getenv("GRIST_TOKEN")
@@ -161,6 +153,39 @@ func post(myRequest string, data []byte) string {
 
 }
 
+func delete(myRequest string) string {
+	// Envoi d'une requête HTTP DELETE à l'API REST de Grist avec une charge de données
+	// Retourne le corps de la réponse
+	client := &http.Client{}
+	url := fmt.Sprintf("%s/api/%s", os.Getenv("GRIST_URL"), myRequest)
+	bearer := "Bearer " + os.Getenv("GRIST_TOKEN")
+
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		log.Fatal("Error creating request %s: %s", url, err)
+	}
+	req.Header.Add("Authorization", bearer)
+
+	// Send the HTTP request
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal("Error sending request %s: %s", url, err)
+	}
+	defer resp.Body.Close()
+
+	// Check the HTTP status code
+	if resp.StatusCode != http.StatusOK {
+		log.Fatal("HTTP Error %s: %s", url, resp.Status)
+	}
+
+	// Read the HTTP response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal("Error reading response %s: %s", url, err)
+	}
+	return string(body)
+}
+
 func GetOrgs() []Org {
 	// Récupère la liste des organisations
 	myOrgs := []Org{}
@@ -175,6 +200,27 @@ func GetOrg(idOrg string) Org {
 	response := get("orgs/" + idOrg)
 	json.Unmarshal([]byte(response), &myOrg)
 	return myOrg
+}
+
+func GetOrgAccess(idOrg string) []User {
+	// Récupère la liste des utilisateurs de l'organisation dont l'identifiant est passé en paramètre
+	var lstUsers EntityAccess
+	url := fmt.Sprintf("orgs/%s/access", idOrg)
+	response := get(url)
+	json.Unmarshal([]byte(response), &lstUsers)
+	return lstUsers.Users
+}
+
+func DisplayOrgAccess(idOrg string) {
+	// Affiche la liste des utilisateurs ayant accès à une organisation
+	lstUsers := GetOrgAccess(idOrg)
+	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
+	fmt.Fprintln(w, "Id\tNom")
+	for _, user := range lstUsers {
+		fmt.Fprintf(w, "%s\t%s\t%s\n", user.Email, user.Name, user.Access)
+	}
+	w.Flush()
+	fmt.Printf("%d utilisateurs\n", len(lstUsers))
 }
 
 func GetOrgWorkspaces(orgId int) []Workspace {
@@ -194,9 +240,15 @@ func GetWorkspace(workspaceId int) Workspace {
 	return workspace
 }
 
-func GetWorkspaceAccess(workspaceId int) WorkspaceAccess {
+func DeleteWorkspace(workspaceId int) {
+	// Supprime un workspace
+	url := fmt.Sprintf("workspaces/%d", workspaceId)
+	delete(url)
+}
+
+func GetWorkspaceAccess(workspaceId int) EntityAccess {
 	// Récupère les droits d'accès à un workspace
-	workspaceAccess := WorkspaceAccess{}
+	workspaceAccess := EntityAccess{}
 	url := fmt.Sprintf("workspaces/%d/access", workspaceId)
 	response := get(url)
 	json.Unmarshal([]byte(response), &workspaceAccess)
@@ -325,27 +377,17 @@ func DisplayOrgs() {
 
 func DisplayOrg(orgId string) {
 	// Affiche les détails sur une organisation
-
 	org := GetOrg(orgId)
 	fmt.Printf("Organisation n°%d : %s\n", org.Id, org.Name)
 	worskspaces := GetOrgWorkspaces(org.Id)
-	fmt.Printf("%d workspaces, dont ceux-ci contiennent au moins un document:\n\n", len(worskspaces))
 
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
-	fmt.Fprintln(w, "Id workspace\tNom Workspace\tId doc\tNom doc")
+	fmt.Fprintln(w, "Id workspace\tNom Workspace\tNb doc")
 	for _, ws := range worskspaces {
-		if len(ws.Docs) > 0 {
-			var lst_docs []string
-			for _, doc := range ws.Docs {
-				lst_docs = append(lst_docs, fmt.Sprintf("%s\t%s", doc.Id, doc.Name))
-			}
-			slices.Sort(lst_docs)
-			for _, doc := range lst_docs {
-				fmt.Fprintf(w, "%d\t%s\t%s\n", ws.Id, ws.Name, doc)
-			}
-		}
+		fmt.Fprintf(w, "%d\t%s\t%d\n", ws.Id, ws.Name, len(ws.Docs))
 	}
 	w.Flush()
+	fmt.Printf("%d workspaces\n", len(worskspaces))
 }
 
 func DisplayWorkspace(workspaceId int) {
@@ -379,7 +421,7 @@ func DisplayWorkspaceAccess(workspaceId int) {
 	wsa := GetWorkspaceAccess(workspaceId)
 
 	fmt.Printf("Droits d'accès au workspace n°%d : %s\n", ws.Id, ws.Name)
-	fmt.Printf("Niveau d'héritage des droits : %s\n", wsa.MaxInheritedRole)
+	displayMaxInheritedRole(wsa.MaxInheritedRole)
 
 	nbUsers := len(wsa.Users)
 	if nbUsers <= 0 {
@@ -388,10 +430,10 @@ func DisplayWorkspaceAccess(workspaceId int) {
 		nbUser := 0
 		fmt.Println("\nAccessible utilisateurs suivants :")
 		w := tabwriter.NewWriter(os.Stdout, 5, 1, 5, ' ', 0)
-		fmt.Fprintf(w, "Nom\tEmail\tAccès direct\tAccès hérité\n")
+		fmt.Fprintf(w, "Id\tNom\tEmail\tAccès direct\tAccès hérité\n")
 		for _, user := range wsa.Users {
 			if user.Access != "" || user.ParentAccess != "" {
-				fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", user.Name, user.Email, user.Access, user.ParentAccess)
+				fmt.Fprintf(w, "%d\t%s\t%s\t%s\t%s\n", user.Id, user.Name, user.Email, user.Access, user.ParentAccess)
 				nbUser += 1
 			}
 		}
@@ -400,31 +442,48 @@ func DisplayWorkspaceAccess(workspaceId int) {
 	}
 }
 
-func GetDocAccess(docId string) UserAccess {
+func GetDocAccess(docId string) EntityAccess {
 	// Retourne la liste des utilisateurs ayant accès au document
-	var lstUsers UserAccess
+	var lstUsers EntityAccess
 	response := get("docs/" + docId + "/access")
 	json.Unmarshal([]byte(response), &lstUsers)
 	return lstUsers
 }
 
+func displayMaxInheritedRole(maxInheritedRole string) {
+	switch maxInheritedRole {
+	case "":
+		fmt.Println("Aucun héritage de droit depuis le niveau supérieur")
+	case "owners":
+		fmt.Println("Héritage complet des droits depuis le niveau supérieur")
+	case "editors":
+		fmt.Println("Héritage des droits d'afficher et éditer depuis le niveau supérieur")
+	case "viewers":
+		fmt.Println("Héritage des droits de consultation depuis le niveau supérieur")
+	default:
+		fmt.Printf("Niveau d'héritage : %s\n", maxInheritedRole)
+	}
+}
+
 func DisplayDocAccess(docId string) {
 	doc := GetDoc(docId)
-	fmt.Printf("Workspace \"%s\" (n°%d) - Document \"%s\"\n", doc.Workspace.Name, doc.Workspace.Id, doc.Workspace.Name)
+	title := fmt.Sprintf("Workspace \"%s\" (n°%d)\nDocument \"%s\"\n", doc.Workspace.Name, doc.Workspace.Id, doc.Name)
+	fmt.Println(title)
 	docAccess := GetDocAccess(docId)
-	fmt.Printf("Niveau d'héritage : %s\n", docAccess.MaxInheritedRole)
-	fmt.Printf("\n%d utilisateurs, dont les suivants ne sont pas hérités:\n", len(docAccess.Users))
+	displayMaxInheritedRole(docAccess.MaxInheritedRole)
+	fmt.Printf("\nUtilisateurs directs:\n")
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
-	fmt.Fprintln(w, "Email\tNom\tAccès")
+	fmt.Fprintln(w, "Id\tEmail\tNom\tAccès")
 	for _, user := range docAccess.Users {
 		if user.Access != "" {
-			fmt.Fprintf(w, "%s\t%s\t%s\n", user.Email, user.Name, user.Access)
+			fmt.Fprintf(w, "%d\t%s\t%s\t%s\n", user.Id, user.Email, user.Name, user.Access)
 		}
 	}
 	w.Flush()
 }
 
 func PurgeDoc(docId string) {
+	// Purge l'historique d'un document, pour ne conserver que les trois dernières modifications
 	url := "docs/" + docId + "/states/remove"
 	data := []byte(`{"keep": "3"}`)
 	response := post(url, data)

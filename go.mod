@@ -1,4 +1,4 @@
-module grist-cli
+module gristctl
 
 go 1.23.3
 
