@@ -17,10 +17,11 @@ Commandes acceptées :
 - gristctl get org <id> : détails d'une organisation
 - gristctl get doc <id> : détails d'un document
 - gristctl get doc <id> access : liste des droits d'accès au document
-- gristctl purge doc <id>: purge l'historique d'un document (conserve les 3 dernières opérations)
+- gristctl purge doc <id> [<nombre d'états à conserver>]: purge l'historique d'un document (conserve les 3 dernières opérations par défaut)
 - gristctl get workspace <id>: détails sur un workspace
 - gristctl get workspace <id> access: liste des droits d'accès à un workspace
-- gristctl delete workspace <id> : suppression d'un workspace`)
+- gristctl delete workspace <id> : suppression d'un workspace
+- gristctl delete user <id> : suppression d'un utilisateur`)
 	os.Exit(0)
 }
 
@@ -98,13 +99,21 @@ func main() {
 	case "purge":
 		{
 			if len(args) > 2 {
-				switch arg2 := args[1]; arg2 {
+				switch args[1] {
 				case "doc":
-					if len(os.Args) == 4 {
-						docId := os.Args[3]
-						fmt.Printf("Purge du document %s\n", docId)
-						gristapi.PurgeDoc(docId)
+					docId := args[2]
+					fmt.Printf("Purge du document %s\n", docId)
+					nbHisto := 3
+					if len(args) == 4 {
+						nb, err := strconv.Atoi(args[3])
+						if err == nil {
+							nbHisto = nb
+						} else {
+							help()
+						}
 					}
+					fmt.Printf("Ne conserve que les %d derniers états\n", nbHisto)
+					gristapi.PurgeDoc(docId, nbHisto)
 				default:
 					help()
 				}
@@ -116,12 +125,26 @@ func main() {
 				switch arg2 := args[1]; arg2 {
 				case "workspace":
 					if len(args) == 3 {
-						arg3, err := strconv.Atoi(args[2])
+						idWorkspace, err := strconv.Atoi(args[2])
 						if err == nil {
-							gristapi.DeleteWorkspace(arg3)
+							gristapi.DeleteWorkspace(idWorkspace)
 						}
 					} else {
 						help()
+					}
+				case "user":
+					if len(args) == 3 {
+						idUser, err := strconv.Atoi(args[2])
+						if err == nil {
+							gristapi.DeleteUser(idUser)
+						}
+					} else {
+						help()
+					}
+				case "doc":
+					if len(args) == 3 {
+						docId := args[2]
+						gristapi.DeleteDoc(docId)
 					}
 				default:
 					help()
