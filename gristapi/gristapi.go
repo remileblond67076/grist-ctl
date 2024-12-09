@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"gristctl/common"
 	"io"
 	"log"
 	"net/http"
@@ -80,139 +81,110 @@ func init() {
 	if os.Getenv("GRIST_TOKEN") == "" || os.Getenv("GRIST_URL") == "" {
 		err := godotenv.Load(".env")
 		if err != nil {
-			log.Fatalf("Erreur lors de la lecture du fichier de configuration\n", err)
+			log.Fatalf("Erreur lors de la lecture du fichier de configuration : %s\n", err)
 		}
 	}
 }
 
-func httpGet(myRequest string) string {
-	// Envoi d'une requête HTTP GET à l'API REST de Grist
+func httpRequest(action string, myRequest string, data *bytes.Buffer) (string, int) {
+	// Envoi d'une requête HTTP à l'API REST de Grist
 	// Retourne le corps de la réponse
-	client := &http.Client{}
 
+	client := &http.Client{}
 	url := fmt.Sprintf("%s/api/%s", os.Getenv("GRIST_URL"), myRequest)
 	bearer := "Bearer " + os.Getenv("GRIST_TOKEN")
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(action, url, data)
 	if err != nil {
-		log.Fatal("Error creating request %s: %s", url, err)
+		log.Fatalf("Error creating request %s: %s", url, err)
 	}
 	req.Header.Add("Authorization", bearer)
+	req.Header.Set("Content-Type", "application/json")
 
 	// Send the HTTP request
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("Error sending request %s: %s", url, err)
+		log.Fatalf("Error sending request %s: %s", url, err)
 	}
 	defer resp.Body.Close()
-
-	// Check the HTTP status code
-	if resp.StatusCode != http.StatusOK {
-		log.Fatal("HTTP Error %s: %s", url, resp.Status)
-	}
 
 	// Read the HTTP response body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal("Error reading response %s: %s", url, err)
+		log.Fatalf("Error reading response %s: %s", url, err)
 	}
-	return string(body)
+	return string(body), resp.StatusCode
+}
+
+func httpGet(myRequest string, data string) string {
+	// Envoi d'une requête HTTP GET à l'API REST de Grist
+	// Retourne le corps de la réponse
+	dataBody := bytes.NewBuffer([]byte(data))
+	body, status := httpRequest("GET", myRequest, dataBody)
+	if status != http.StatusOK {
+		fmt.Printf("Code retour de %s : %d (%s)\n", myRequest, status, body)
+	}
+	return body
 }
 
 func httpPost(myRequest string, data string) (string, int) {
 	// Envoi d'une requête HTTP POST à l'API REST de Grist avec une charge de données
 	// Retourne le corps de la réponse
-	client := &http.Client{}
-	url := fmt.Sprintf("%s/api/%s", os.Getenv("GRIST_URL"), myRequest)
-	bearer := "Bearer " + os.Getenv("GRIST_TOKEN")
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(data)))
-	if err != nil {
-		log.Fatal("Error creating request %s: %s", url, err)
-	}
-	req.Header.Add("Authorization", bearer)
+	dataBody := bytes.NewBuffer([]byte(data))
+	body, status := httpRequest("POST", myRequest, dataBody)
+	return body, status
+}
 
-	// Send the HTTP request
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatal("Error sending request %s: %s", url, err)
-	}
-	defer resp.Body.Close()
+func httpPatch(myRequest string, data string) (string, int) {
+	// Envoi d'une requête HTTP POST à l'API REST de Grist avec une charge de données
+	// Retourne le corps de la réponse
 
-	// Check the HTTP status code
-	if resp.StatusCode != http.StatusOK {
-		log.Fatal("HTTP Error %s: %s", url, resp.Status)
-	}
-
-	// Read the HTTP response body
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal("Error reading response %s: %s", url, err)
-	}
-	return string(body), resp.StatusCode
-
+	dataBody := bytes.NewBuffer([]byte(data))
+	body, status := httpRequest("PATCH", myRequest, dataBody)
+	return body, status
 }
 
 func httpDelete(myRequest string, data string) (string, int) {
 	// Envoi d'une requête HTTP DELETE à l'API REST de Grist avec une charge de données
 	// Retourne le corps de la réponse
-	client := &http.Client{}
-	url := fmt.Sprintf("%s/api/%s", os.Getenv("GRIST_URL"), myRequest)
-	bearer := "Bearer " + os.Getenv("GRIST_TOKEN")
 
-	req, err := http.NewRequest("DELETE", url, bytes.NewBuffer([]byte(data)))
-	if err != nil {
-		log.Fatal("Error creating request %s: %s", url, err)
-	}
-	req.Header.Add("Authorization", bearer)
-
-	// Send the HTTP request
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatal("Error sending request %s: %s", url, err)
-	}
-	defer resp.Body.Close()
-
-	// Check the HTTP status code
-	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("HTTP Error %s: %s\n", url, resp.Status)
-	}
-
-	// Read the HTTP response body
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal("Error reading response %s: %s", url, err)
-	}
-	return string(body), resp.StatusCode
+	dataBody := bytes.NewBuffer([]byte(data))
+	body, status := httpRequest("DELETE", myRequest, dataBody)
+	return body, status
 }
 
 func GetOrgs() []Org {
 	// Récupère la liste des organisations
+
 	myOrgs := []Org{}
-	response := httpGet("orgs")
+	response := httpGet("orgs", "")
 	json.Unmarshal([]byte(response), &myOrgs)
 	return myOrgs
 }
 
 func GetOrg(idOrg string) Org {
 	// Récupère l'organisation dont l'identifiant est passé en paramètre
+
 	myOrg := Org{}
-	response := httpGet("orgs/" + idOrg)
+	response := httpGet("orgs/"+idOrg, "")
 	json.Unmarshal([]byte(response), &myOrg)
 	return myOrg
 }
 
 func GetOrgAccess(idOrg string) []User {
 	// Récupère la liste des utilisateurs de l'organisation dont l'identifiant est passé en paramètre
+
 	var lstUsers EntityAccess
 	url := fmt.Sprintf("orgs/%s/access", idOrg)
-	response := httpGet(url)
+	response := httpGet(url, "")
 	json.Unmarshal([]byte(response), &lstUsers)
 	return lstUsers.Users
 }
 
 func DisplayOrgAccess(idOrg string) {
 	// Affiche la liste des utilisateurs ayant accès à une organisation
+
 	lstUsers := GetOrgAccess(idOrg)
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, '|', 0)
 	fmt.Fprintln(w, "Id\tNom")
@@ -226,7 +198,7 @@ func DisplayOrgAccess(idOrg string) {
 func GetOrgWorkspaces(orgId int) []Workspace {
 	// Récupère les information sur une organisation particulière
 	lstWorkspaces := []Workspace{}
-	response := httpGet("orgs/" + strconv.Itoa(orgId) + "/workspaces")
+	response := httpGet("orgs/"+strconv.Itoa(orgId)+"/workspaces", "")
 	json.Unmarshal([]byte(response), &lstWorkspaces)
 	return lstWorkspaces
 }
@@ -235,13 +207,14 @@ func GetWorkspace(workspaceId int) Workspace {
 	// Récupère un workspace
 	workspace := Workspace{}
 	url := fmt.Sprintf("workspaces/%d", workspaceId)
-	response := httpGet(url)
+	response := httpGet(url, "")
 	json.Unmarshal([]byte(response), &workspace)
 	return workspace
 }
 
 func DeleteWorkspace(workspaceId int) {
 	// Supprime un workspace
+
 	url := fmt.Sprintf("workspaces/%d", workspaceId)
 	response, status := httpDelete(url, "")
 	if status == http.StatusOK {
@@ -253,6 +226,7 @@ func DeleteWorkspace(workspaceId int) {
 
 func DeleteDoc(docId string) {
 	// Supprime un document
+
 	url := fmt.Sprintf("docs/%s", docId)
 	response, status := httpDelete(url, "")
 	if status == http.StatusOK {
@@ -264,6 +238,7 @@ func DeleteDoc(docId string) {
 
 func DeleteUser(userId int) {
 	// Supprime un utilisateur
+
 	url := fmt.Sprintf("users/%d", userId)
 	response, status := httpDelete(url, `{"name": ""}`)
 
@@ -286,18 +261,20 @@ func DeleteUser(userId int) {
 
 func GetWorkspaceAccess(workspaceId int) EntityAccess {
 	// Récupère les droits d'accès à un workspace
+
 	workspaceAccess := EntityAccess{}
 	url := fmt.Sprintf("workspaces/%d/access", workspaceId)
-	response := httpGet(url)
+	response := httpGet(url, "")
 	json.Unmarshal([]byte(response), &workspaceAccess)
 	return workspaceAccess
 }
 
 func GetDoc(docId string) Doc {
 	// Récupère les informations relatives à un document particulier
+
 	doc := Doc{}
 	url := "docs/" + docId
-	response := httpGet(url)
+	response := httpGet(url, "")
 	json.Unmarshal([]byte(response), &doc)
 	return doc
 }
@@ -306,7 +283,7 @@ func GetDocTables(docId string) Tables {
 	// Récupère la liste des tables contenues dans un document
 	tables := Tables{}
 	url := "docs/" + docId + "/tables"
-	response := httpGet(url)
+	response := httpGet(url, "")
 	json.Unmarshal([]byte(response), &tables)
 
 	return tables
@@ -314,9 +291,10 @@ func GetDocTables(docId string) Tables {
 
 func GetTableColumns(docId string, tableId string) TableColumns {
 	// Récupère la liste des colonnes d'une table
+
 	columns := TableColumns{}
 	url := "docs/" + docId + "/tables/" + tableId + "/columns"
-	response := httpGet(url)
+	response := httpGet(url, "")
 	json.Unmarshal([]byte(response), &columns)
 
 	return columns
@@ -324,9 +302,10 @@ func GetTableColumns(docId string, tableId string) TableColumns {
 
 func GetTableRows(docId string, tableId string) TableRows {
 	// Récupère les données d'une table
+
 	rows := TableRows{}
 	url := "docs/" + docId + "/tables/" + tableId + "/data"
-	response := httpGet(url)
+	response := httpGet(url, "")
 	json.Unmarshal([]byte(response), &rows)
 
 	return rows
@@ -340,6 +319,7 @@ func DisplayDoc(docId string) {
 	//   - Nombre de colonnes
 	//   - Nombre de ligne
 	//   - Liste des colonnes
+
 	doc := GetDoc(docId)
 
 	type TableDetails struct {
@@ -403,6 +383,7 @@ func DisplayDoc(docId string) {
 
 func DisplayOrgs() {
 	// Affiche la liste des organisations accessibles
+
 	lstOrgs := GetOrgs()
 	fmt.Printf("%d organisations trouvées:\n\n", len(lstOrgs))
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
@@ -415,27 +396,34 @@ func DisplayOrgs() {
 
 func DisplayOrg(orgId string) {
 	// Affiche les détails sur une organisation
+
 	org := GetOrg(orgId)
-	fmt.Printf("Organisation n°%d : %s\n", org.Id, org.Name)
+	common.DisplayTitle(fmt.Sprintf("Organisation n°%d : %s", org.Id, org.Name))
 	worskspaces := GetOrgWorkspaces(org.Id)
 
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
-	fmt.Fprintln(w, "Id workspace\tNom Workspace\tNb doc")
+	fmt.Printf("%d workspaces\n\n", len(worskspaces))
+	fmt.Fprintln(w, "Workspace Id\tWorkspace name\tNb doc\tNb direct users")
 	for _, ws := range worskspaces {
-		fmt.Fprintf(w, "%d\t%s\t%d\n", ws.Id, ws.Name, len(ws.Docs))
+		users := GetWorkspaceAccess(ws.Id)
+		nbUsers := 0
+		for _, user := range users.Users {
+			if user.Access != "" {
+				nbUsers += 1
+			}
+		}
+		fmt.Fprintf(w, "%d\t%s\t%d\t%d\n", ws.Id, ws.Name, len(ws.Docs), nbUsers)
 	}
 	w.Flush()
-	fmt.Printf("%d workspaces\n", len(worskspaces))
 }
 
 func DisplayWorkspace(workspaceId int) {
 	// Affiche des détails d'un Workspace
 
 	ws := GetWorkspace(workspaceId)
-	fmt.Printf("Organisation n°%d : %s\n", ws.Org.Id, ws.Org.Name)
-	fmt.Printf("Workspace n°%d : %s\n\n", ws.Id, ws.Name)
+	common.DisplayTitle(fmt.Sprintf("Organisation n°%d : %s\nWorkspace n°%d : %s", ws.Org.Id, ws.Org.Name, ws.Id, ws.Name))
 
-	if len(ws.Docs) > 1 {
+	if len(ws.Docs) > 0 {
 		fmt.Printf("Contient %d documents :\n", len(ws.Docs))
 		w := tabwriter.NewWriter(os.Stdout, 1, 1, 5, ' ', 0)
 		fmt.Fprintf(w, "Id\tNom\tÉpinglé\n")
@@ -458,8 +446,8 @@ func DisplayWorkspaceAccess(workspaceId int) {
 	ws := GetWorkspace((workspaceId))
 	wsa := GetWorkspaceAccess(workspaceId)
 
-	fmt.Printf("Droits d'accès au workspace n°%d : %s\n", ws.Id, ws.Name)
-	displayMaxInheritedRole(wsa.MaxInheritedRole)
+	common.DisplayTitle(fmt.Sprintf("Droits d'accès au workspace n°%d : %s", ws.Id, ws.Name))
+	displayRole(wsa.MaxInheritedRole)
 
 	nbUsers := len(wsa.Users)
 	if nbUsers <= 0 {
@@ -482,14 +470,18 @@ func DisplayWorkspaceAccess(workspaceId int) {
 
 func GetDocAccess(docId string) EntityAccess {
 	// Retourne la liste des utilisateurs ayant accès au document
+
 	var lstUsers EntityAccess
-	response := httpGet("docs/" + docId + "/access")
+	url := fmt.Sprintf("docs/%s/access", docId)
+	response := httpGet(url, "")
 	json.Unmarshal([]byte(response), &lstUsers)
 	return lstUsers
 }
 
-func displayMaxInheritedRole(maxInheritedRole string) {
-	switch maxInheritedRole {
+func displayRole(role string) {
+	// Traduction du rôle utilisateur
+
+	switch role {
 	case "":
 		fmt.Println("Aucun héritage de droit depuis le niveau supérieur")
 	case "owners":
@@ -499,16 +491,18 @@ func displayMaxInheritedRole(maxInheritedRole string) {
 	case "viewers":
 		fmt.Println("Héritage des droits de consultation depuis le niveau supérieur")
 	default:
-		fmt.Printf("Niveau d'héritage : %s\n", maxInheritedRole)
+		fmt.Printf("Niveau d'héritage : %s\n", role)
 	}
 }
 
 func DisplayDocAccess(docId string) {
+	// Affiche les utilisateurs ayant accès à un document
+
 	doc := GetDoc(docId)
 	title := fmt.Sprintf("Workspace \"%s\" (n°%d)\nDocument \"%s\"\n", doc.Workspace.Name, doc.Workspace.Id, doc.Name)
 	fmt.Println(title)
 	docAccess := GetDocAccess(docId)
-	displayMaxInheritedRole(docAccess.MaxInheritedRole)
+	displayRole(docAccess.MaxInheritedRole)
 	fmt.Printf("\nUtilisateurs directs:\n")
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
 	fmt.Fprintln(w, "Id\tEmail\tNom\tAccès hérité\tAccès direct")
@@ -522,10 +516,80 @@ func DisplayDocAccess(docId string) {
 
 func PurgeDoc(docId string, nbHisto int) {
 	// Purge l'historique d'un document, pour ne conserver que les trois dernières modifications
+
 	url := "docs/" + docId + "/states/remove"
 	data := fmt.Sprintf(`{"keep": "%d"}`, nbHisto)
 	_, status := httpPost(url, data)
 	if status == http.StatusOK {
-		fmt.Println("Historique purgé")
+		fmt.Printf("Historique purgé (%d derniers états) ✅\n", nbHisto)
 	}
+}
+
+func ImportUser(email string, orgId int, workspaceName string, role string) {
+	// Importe un utilisateur dans un workspace avec un role
+
+	lstWorkspaces := GetOrgWorkspaces(orgId)
+	idWorkspace := 0
+	for _, ws := range lstWorkspaces {
+		if ws.Name == workspaceName {
+			idWorkspace = ws.Id
+		}
+	}
+	if idWorkspace == 0 {
+		idWorkspace = CreateWorkspace(orgId, workspaceName)
+	}
+	if idWorkspace == 0 {
+		fmt.Printf("Impossible de créer le workspace %s\n", workspaceName)
+	} else {
+		ws := GetWorkspace(idWorkspace)
+
+		url := fmt.Sprintf("workspaces/%d/access", idWorkspace)
+		data := fmt.Sprintf(`{"delta": {"users": {"%s": "%s"}}}`, email, role)
+
+		body, status := httpPatch(url, data)
+
+		var result string
+		if status == http.StatusOK {
+			result = "✅"
+		} else {
+			result = fmt.Sprintf("❗️ (%s)", body)
+		}
+		fmt.Printf("Import de %s dans l'espace %s (n°%d) avec le role %s\t : %s\n", email, ws.Name, ws.Id, role, result)
+	}
+
+}
+
+func CreateWorkspace(orgId int, workspaceName string) int {
+	// Création d'un workspace dans une organisation
+
+	url := fmt.Sprintf("orgs/%d/workspaces", orgId)
+	data := fmt.Sprintf(`{"name":"%s"}`, workspaceName)
+	body, status := httpPost(url, data)
+	idWorkspace := 0
+	if status == http.StatusOK {
+		id, err := strconv.Atoi(body)
+		if err == nil {
+			idWorkspace = id
+		}
+	}
+	return idWorkspace
+}
+
+func DisplayUserMatrix() {
+	// Affichage de la matrice des droits
+
+	lstOrg := GetOrgs()
+	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
+	fmt.Fprintf(w, "Id\tName\tAccess\tWokspace id\tWorkspace name\n")
+	for _, org := range lstOrg {
+		common.DisplayTitle(fmt.Sprintf("Org %s (%d)", org.Name, org.Id))
+		for _, ws := range GetOrgWorkspaces(org.Id) {
+			for _, user := range GetWorkspaceAccess(ws.Id).Users {
+				if user.Access != "" {
+					fmt.Fprintf(w, "%d\t%s\t%s\t%s\t%d\n", user.Id, user.Email, user.Access, ws.Name, ws.Id)
+				}
+			}
+		}
+	}
+	w.Flush()
 }

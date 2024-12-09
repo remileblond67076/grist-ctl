@@ -1,27 +1,31 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
+	"sync"
 
+	"gristctl/common"
 	"gristctl/gristapi"
 )
 
 func help() {
-	fmt.Println(`-----------------------------
-GRIST : interrogation des API
------------------------------
-Commandes acceptées :
-- gristctl get org : liste des organisations
-- gristctl get org <id> : détails d'une organisation
-- gristctl get doc <id> : détails d'un document
-- gristctl get doc <id> access : liste des droits d'accès au document
-- gristctl purge doc <id> [<nombre d'états à conserver>]: purge l'historique d'un document (conserve les 3 dernières opérations par défaut)
-- gristctl get workspace <id>: détails sur un workspace
-- gristctl get workspace <id> access: liste des droits d'accès à un workspace
-- gristctl delete workspace <id> : suppression d'un workspace
-- gristctl delete user <id> : suppression d'un utilisateur`)
+	common.DisplayTitle("GRIST : interrogation des API")
+	fmt.Println(`Commandes acceptées :
+- get org : liste des organisations
+- get org <id> : détails d'une organisation
+- get doc <id> : détails d'un document
+- get doc <id> access : liste des droits d'accès au document
+- purge doc <id> [<nombre d'états à conserver>]: purge l'historique d'un document (conserve les 3 dernières opérations par défaut)
+- get workspace <id>: détails sur un workspace
+- get workspace <id> access: liste des droits d'accès à un workspace
+- delete workspace <id> : suppression d'un workspace
+- delete user <id> : suppression d'un utilisateur
+- import users : importe des utilisateurs dont la liste est envoyée sur l'entrée standard
+- get users : affiche l'ensemble des droits utilisateurs`)
 	os.Exit(0)
 }
 
@@ -91,6 +95,8 @@ func main() {
 							help()
 						}
 					}
+				case "users":
+					gristapi.DisplayUserMatrix()
 				default:
 					help()
 				}
@@ -102,7 +108,6 @@ func main() {
 				switch args[1] {
 				case "doc":
 					docId := args[2]
-					fmt.Printf("Purge du document %s\n", docId)
 					nbHisto := 3
 					if len(args) == 4 {
 						nb, err := strconv.Atoi(args[3])
@@ -112,7 +117,6 @@ func main() {
 							help()
 						}
 					}
-					fmt.Printf("Ne conserve que les %d derniers états\n", nbHisto)
 					gristapi.PurgeDoc(docId, nbHisto)
 				default:
 					help()
@@ -149,6 +153,51 @@ func main() {
 				default:
 					help()
 				}
+			}
+		}
+	case "import":
+		if len(args) > 1 {
+			switch args[1] {
+			case "users":
+				common.DisplayTitle("Import des utilisateurs")
+				fmt.Println("Format des données attendues en entrée standard : <mail>;<org id>;<workspace name>;<role>")
+
+				// Lecture des données en entrée standard
+				scanner := bufio.NewScanner(os.Stdin)
+				var wg sync.WaitGroup
+				for scanner.Scan() {
+					line := scanner.Text()
+					data := strings.Split(line, ";")
+					if len(data) == 4 {
+						email := data[0]
+						orgId, errOrg := strconv.Atoi(data[1])
+						if errOrg != nil {
+							fmt.Printf("ERREUR : l'id d'organisation devrait être un entier (%s)\n", data[1])
+						}
+						workspaceName := data[2]
+
+						role := data[3]
+						wg.Add(1)
+						func() {
+							defer wg.Done()
+							gristapi.ImportUser(
+								email,
+								orgId,
+								workspaceName,
+								role,
+							)
+						}()
+					} else {
+						fmt.Printf("Ligne mal formatée : %s", line)
+					}
+				}
+				wg.Wait()
+
+				if scanner.Err() != nil {
+					// Handle error.
+				}
+			default:
+				help()
 			}
 		}
 	default:

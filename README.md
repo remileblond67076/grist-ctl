@@ -11,16 +11,37 @@ GRIST_URL="https://<url du serveur GRIST avant /api>"
 
 ## Usage
 
+### Général
+
 Liste des commandes utilisables :
 
-- `grist-cli get org` : liste des organisations
-- `grist-cli get org <id>` : détails d'une organisation
-- `grist-cli get doc <id>` : détails d'un document
-- `grist-cli get doc <id> access` : liste des droits d'accès au document
-- `grist-cli purge doc <id> [<nombre d'états à conserver>]`: purge l'historique d'un document (conserve les 3 dernières opérations par défaut)
-- `grist-cli get workspace <id>`: détails sur un workspace
-- `grist-cli get workspace <id> access`: liste des droits d'accès à un workspace
-- `gristctl delete workspace <id>` : suppression d'un workspace
+- `get org` : liste des organisations
+- `get org <id>` : détails d'une organisation
+- `get doc <id>` : détails d'un document
+- `get doc <id> access` : liste des droits d'accès au document
+- `purge doc <id> [<nombre d'états à conserver>]`: purge l'historique d'un document (conserve les 3 dernières opérations par défaut)
+- `get workspace <id>`: détails sur un workspace
+- `get workspace <id> access`: liste des droits d'accès à un workspace
+- `delete workspace <id>` : suppression d'un workspace
+- `import users` : importe des utilisateurs dont la liste est envoyée sur l'entrée standard
+- `get users` : affiche l'ensemble des droits utilisateurs
+
+### Import des utilisateurs depuis un annuaire ActiveDirectory
+
+Extraction de la liste des membres des groupes AD GA_GRIST_PU et GA_GRIST_PA :
+
+```powershell
+foreach ($grp in ('a', 'u')) {
+    get-adgroupmember ga_grist_p$grp | get-aduser -properties mail, extensionAttribute6, extensionAttribute15 |select-object mail, extensionAttribute6, extensionAttribute15 | export-csv -Path ga_grist_p$grp.csv -NoTypeInformation -Encoding:UTF8
+}
+```
+
+```bash
+cat ga_grist_pu.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Direction-"$2";viewers"}' | ./gristctl import users
+cat ga_grist_pu.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Service-"$3";viewers"}' | ./gristctl import users
+cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Direction-"$2";editors"}' | ./gristctl import users
+cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Service-"$3";editors"}' | ./gristctl import users
+```
 
 ## Intégration
 
