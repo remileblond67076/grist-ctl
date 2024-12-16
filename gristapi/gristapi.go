@@ -544,7 +544,7 @@ func PurgeDoc(docId string, nbHisto int) {
 }
 
 func ImportUser(email string, orgId int, workspaceName string, role string) {
-	// Importe un utilisateur dans un workspace avec un role
+	// Import a user into a workspace with a role
 
 	lstWorkspaces := GetOrgWorkspaces(orgId)
 	idWorkspace := 0
@@ -557,7 +557,7 @@ func ImportUser(email string, orgId int, workspaceName string, role string) {
 		idWorkspace = CreateWorkspace(orgId, workspaceName)
 	}
 	if idWorkspace == 0 {
-		fmt.Printf("Impossible de créer le workspace %s\n", workspaceName)
+		fmt.Printf("Unable to create workspace %s\n", workspaceName)
 	} else {
 		ws := GetWorkspace(idWorkspace)
 
@@ -572,13 +572,13 @@ func ImportUser(email string, orgId int, workspaceName string, role string) {
 		} else {
 			result = fmt.Sprintf("❗️ (%s)", body)
 		}
-		fmt.Printf("Import de %s dans l'espace %s (n°%d) avec le role %s\t : %s\n", email, ws.Name, ws.Id, role, result)
+		fmt.Printf("Import %s in %s workspace (n°%d) with %s role\t : %s\n", email, ws.Name, ws.Id, role, result)
 	}
 
 }
 
 func CreateWorkspace(orgId int, workspaceName string) int {
-	// Création d'un workspace dans une organisation
+	// Create a workspace in an organization
 
 	url := fmt.Sprintf("orgs/%d/workspaces", orgId)
 	data := fmt.Sprintf(`{"name":"%s"}`, workspaceName)
@@ -594,7 +594,7 @@ func CreateWorkspace(orgId int, workspaceName string) int {
 }
 
 func DisplayUserMatrix() {
-	// Affichage de la matrice des droits
+	// Displaying the rights matrix
 
 	lstOrg := GetOrgs()
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
