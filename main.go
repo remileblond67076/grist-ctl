@@ -1,38 +1,18 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
-	"sync"
 
-	"gristctl/common"
 	"gristctl/gristapi"
+	"gristctl/gristtools"
 )
-
-func help() {
-	common.DisplayTitle("GRIST : interrogation des API")
-	fmt.Println(`Commandes acceptées :
-- get org : liste des organisations
-- get org <id> : détails d'une organisation
-- get doc <id> : détails d'un document
-- get doc <id> access : liste des droits d'accès au document
-- purge doc <id> [<nombre d'états à conserver>]: purge l'historique d'un document (conserve les 3 dernières opérations par défaut)
-- get workspace <id>: détails sur un workspace
-- get workspace <id> access: liste des droits d'accès à un workspace
-- delete workspace <id> : suppression d'un workspace
-- delete user <id> : suppression d'un utilisateur
-- import users : importe des utilisateurs dont la liste est envoyée sur l'entrée standard
-- get users : affiche l'ensemble des droits utilisateurs`)
-	os.Exit(0)
-}
 
 func main() {
 	args := os.Args[1:]
 	if len(args) < 2 {
-		help()
+		gristtools.Help()
 	}
 
 	switch arg1 := args[0]; arg1 {
@@ -54,10 +34,10 @@ func main() {
 								orgId := args[2]
 								gristapi.DisplayOrgAccess(orgId)
 							default:
-								help()
+								gristtools.Help()
 							}
 						default:
-							help()
+							gristtools.Help()
 						}
 					}
 				case "doc":
@@ -73,7 +53,7 @@ func main() {
 								gristapi.DisplayDocAccess(docId)
 							}
 						default:
-							help()
+							gristtools.Help()
 						}
 					}
 				case "workspace":
@@ -92,13 +72,13 @@ func main() {
 								}
 							}
 						default:
-							help()
+							gristtools.Help()
 						}
 					}
 				case "users":
 					gristapi.DisplayUserMatrix()
 				default:
-					help()
+					gristtools.Help()
 				}
 			}
 		}
@@ -114,12 +94,12 @@ func main() {
 						if err == nil {
 							nbHisto = nb
 						} else {
-							help()
+							gristtools.Help()
 						}
 					}
 					gristapi.PurgeDoc(docId, nbHisto)
 				default:
-					help()
+					gristtools.Help()
 				}
 			}
 		}
@@ -134,7 +114,7 @@ func main() {
 							gristapi.DeleteWorkspace(idWorkspace)
 						}
 					} else {
-						help()
+						gristtools.Help()
 					}
 				case "user":
 					if len(args) == 3 {
@@ -143,7 +123,7 @@ func main() {
 							gristapi.DeleteUser(idUser)
 						}
 					} else {
-						help()
+						gristtools.Help()
 					}
 				case "doc":
 					if len(args) == 3 {
@@ -151,7 +131,7 @@ func main() {
 						gristapi.DeleteDoc(docId)
 					}
 				default:
-					help()
+					gristtools.Help()
 				}
 			}
 		}
@@ -159,49 +139,13 @@ func main() {
 		if len(args) > 1 {
 			switch args[1] {
 			case "users":
-				common.DisplayTitle("Import des utilisateurs")
-				fmt.Println("Format des données attendues en entrée standard : <mail>;<org id>;<workspace name>;<role>")
-
-				// Lecture des données en entrée standard
-				scanner := bufio.NewScanner(os.Stdin)
-				var wg sync.WaitGroup
-				for scanner.Scan() {
-					line := scanner.Text()
-					data := strings.Split(line, ";")
-					if len(data) == 4 {
-						email := data[0]
-						orgId, errOrg := strconv.Atoi(data[1])
-						if errOrg != nil {
-							fmt.Printf("ERREUR : l'id d'organisation devrait être un entier (%s)\n", data[1])
-						}
-						workspaceName := data[2]
-
-						role := data[3]
-						wg.Add(1)
-						func() {
-							defer wg.Done()
-							gristapi.ImportUser(
-								email,
-								orgId,
-								workspaceName,
-								role,
-							)
-						}()
-					} else {
-						fmt.Printf("Ligne mal formatée : %s", line)
-					}
-				}
-				wg.Wait()
-
-				if scanner.Err() != nil {
-					// Handle error.
-				}
+				gristtools.ImportUsers()
 			default:
-				help()
+				gristtools.Help()
 			}
 		}
 	default:
-		help()
+		gristtools.Help()
 	}
 
 }
