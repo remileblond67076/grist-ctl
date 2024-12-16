@@ -1,13 +1,12 @@
-package main
+package common
 
 import (
-	"gristctl/common"
 	"testing"
 )
 
 func TestTitle(t *testing.T) {
 	txt := "Ceci est mon texte"
-	title := common.Title(txt)
+	title := Title(txt)
 
 	lenTitle := len(title)
 	lenTxt := len(txt)

@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"slices"
 	"sort"
 	"strconv"
@@ -78,11 +79,15 @@ type TableRows struct {
 }
 
 func init() {
+	home := os.Getenv("HOME")
+	configFile := filepath.Join(home, ".gristctl")
 	if os.Getenv("GRIST_TOKEN") == "" || os.Getenv("GRIST_URL") == "" {
-		err := godotenv.Load(".env")
+		fmt.Printf("Reading %s config file...", configFile)
+		err := godotenv.Load(configFile)
 		if err != nil {
 			log.Fatalf("Error reading configuration file : %s\n", err)
 		}
+		fmt.Println("OK")
 	}
 }
 

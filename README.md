@@ -1,34 +1,35 @@
-# GRIST-cli : exploitation de l'API GRIST
+# GRIST-cli : GRIST API tool
 
 ## Configuration
 
-Mettre en place un fichier `.end` contenant les informations suivantes :
+Set up a `$HOME/.gristctl` file containing the following information:
 
 ```ini
-GRIST_TOKEN="clef de session"
-GRIST_URL="https://<url du serveur GRIST avant /api>"
+GRIST_TOKEN="user session token"
+GRIST_URL="https://<GRIST server URL, without /api>"
 ```
 
 ## Usage
 
-### Général
+### General
 
-Liste des commandes utilisables :
+List of commands :
 
-- `get org` : liste des organisations
-- `get org <id>` : détails d'une organisation
-- `get doc <id>` : détails d'un document
-- `get doc <id> access` : liste des droits d'accès au document
-- `purge doc <id> [<nombre d'états à conserver>]`: purge l'historique d'un document (conserve les 3 dernières opérations par défaut)
-- `get workspace <id>`: détails sur un workspace
-- `get workspace <id> access`: liste des droits d'accès à un workspace
-- `delete workspace <id>` : suppression d'un workspace
-- `import users` : importe des utilisateurs dont la liste est envoyée sur l'entrée standard
-- `get users` : affiche l'ensemble des droits utilisateurs
+- `get org` : organization list
+- `get org <id>` : organization details
+- `get doc <id>` : document details
+- `get doc <id> access` : list of document access rights
+- `purge doc <id> [<number of states to keep>]`: purges document history (retains last 3 operations by default)
+- `get workspace <id>`: workspace details
+- `get workspace <id> access`: list of workspace access rights
+- `delete workspace <id>` : delete a workspace
+- `delete user <id>` : delete a user
+- `import users` : imports users from standard input
+- `get users` : displays all user rights
 
-### Import des utilisateurs depuis un annuaire ActiveDirectory
+### Import users from an ActiveDirectory directory
 
-Extraction de la liste des membres des groupes AD GA_GRIST_PU et GA_GRIST_PA :
+Extract the list of members of AD groups GA_GRIST_PU and GA_GRIST_PA :
 
 ```powershell
 foreach ($grp in ('a', 'u')) {
@@ -43,11 +44,11 @@ cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;D
 cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Service-"$3";editors"}' | ./gristctl import users
 ```
 
-## Intégration
+## Integration
 
-### Tests unitaires
+### Unit testing
 
-Lancement des tests unitaires à l'aide de la commande suivante :
+Launch unit tests with the following command :
 
 ```bash
 go test .
@@ -55,13 +56,13 @@ go test .
 
 ### Compilation
 
-Pour construire les binaires pour la plateforme de développement, utiliser la commande suivante :
+To build binaries for the development platform, use the following command:
 
 ```bash
 go build .
 ```
 
-Pour construire les binaires pour Windows :
+To build binaries for Windows :
 
 ```bash
 GOOS=windows GOARCH=amd64 go build .

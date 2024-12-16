@@ -1,29 +1,28 @@
-package main
+package gristapi
 
 import (
 	"fmt"
-	"gristctl/gristapi"
 	"testing"
 )
 
 func TestConnect(t *testing.T) {
-	orgs := gristapi.GetOrgs()
+	orgs := GetOrgs()
 	nbOrgs := len(orgs)
 
 	if nbOrgs < 2 {
-		t.Errorf("Je ne trouve que %d organisations", nbOrgs)
+		t.Errorf("We only found %d organizations", nbOrgs)
 	}
 
 	for i, org := range orgs {
 		orgId := fmt.Sprintf("%d", org.Id)
-		if gristapi.GetOrg(orgId).Name != orgs[i].Name {
-			t.Error("Ne trouve pas l'organisation principale")
+		if GetOrg(orgId).Name != orgs[i].Name {
+			t.Error("We don't find main organization.")
 		}
 
-		workspaces := gristapi.GetOrgWorkspaces(org.Id)
+		workspaces := GetOrgWorkspaces(org.Id)
 
 		if len(workspaces) < 1 {
-			t.Errorf("Aucun Workspace dans l'organisation %d", org.Id)
+			t.Errorf("No workspace in org n°%d", org.Id)
 		}
 
 		for i, workspace := range workspaces {
@@ -31,7 +30,7 @@ func TestConnect(t *testing.T) {
 				t.Errorf("Workspace %d : le domaine du workspace %s ne correspond pas à %s", workspace.Id, workspace.OrgDomain, org.Domain)
 			}
 
-			myWorkspace := gristapi.GetWorkspace(workspace.Id)
+			myWorkspace := GetWorkspace(workspace.Id)
 			if myWorkspace.Name != workspace.Name {
 				t.Errorf("Workspace n°%d : les noms ne correspondent pas (%s/%s)", workspace.Id, workspace.Name, myWorkspace.Name)
 			}
@@ -46,13 +45,13 @@ func TestConnect(t *testing.T) {
 				}
 
 				// Un document doit avoir au moins une table
-				tables := gristapi.GetDocTables(doc.Id)
+				tables := GetDocTables(doc.Id)
 				if len(tables.Tables) < 1 {
 					t.Errorf("Le document n°%s ne contient pas de table", doc.Name)
 				}
 				for _, table := range tables.Tables {
 					// Une table doit avoir au moins une colonne
-					cols := gristapi.GetTableColumns(doc.Id, table.Id)
+					cols := GetTableColumns(doc.Id, table.Id)
 					if len(cols.Columns) < 1 {
 						t.Errorf("La table %s du document %s ne contient pas de colonne", table.Id, doc.Id)
 					}
