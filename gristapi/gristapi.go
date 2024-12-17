@@ -343,13 +343,13 @@ func DisplayDoc(docId string) {
 	title := color.New(color.FgRed).SprintFunc()
 	fmt.Printf("\nDocument %s (%s)", title(doc.Name), doc.Id)
 	if doc.IsPinned {
-		fmt.Printf(" - épinglé\n")
+		fmt.Printf(" 📌\n")
 	} else {
-		fmt.Printf(" - non épinglé\n")
+		fmt.Printf("\n")
 	}
 
 	var tables Tables = GetDocTables(docId)
-	fmt.Printf("Contient %d tables\n", len(tables.Tables))
+	fmt.Printf("Contains %d tables\n", len(tables.Tables))
 	var wg sync.WaitGroup
 	var tables_details []TableDetails
 	for _, table := range tables.Tables {
@@ -396,7 +396,7 @@ func DisplayOrgs() {
 	// Displays the list of accessible organizations
 
 	lstOrgs := GetOrgs()
-	fmt.Printf("%d organisations trouvées:\n\n", len(lstOrgs))
+	fmt.Printf("%d organisations found:\n\n", len(lstOrgs))
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
 	fmt.Fprintln(w, "Id\tNom")
 	for _, org := range lstOrgs {
@@ -455,7 +455,7 @@ func DisplayWorkspace(workspaceId int) {
 	if len(ws.Docs) > 0 {
 		fmt.Printf("Contains %d documents :\n", len(ws.Docs))
 		w := tabwriter.NewWriter(os.Stdout, 1, 1, 5, ' ', 0)
-		fmt.Fprintf(w, "Id\tNom\tÉpinglé\n")
+		fmt.Fprintf(w, "Id\tName\tPinned\n")
 		for _, doc := range ws.Docs {
 			pin := ""
 			if doc.IsPinned {
@@ -470,7 +470,7 @@ func DisplayWorkspace(workspaceId int) {
 }
 
 func DisplayWorkspaceAccess(workspaceId int) {
-	// Affiche les droits d'accès à un workspace
+	// Displays workspace access rights
 
 	ws := GetWorkspace((workspaceId))
 	wsa := GetWorkspaceAccess(workspaceId)
