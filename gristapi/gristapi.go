@@ -13,6 +13,7 @@ import (
 	"slices"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"text/tabwriter"
 
@@ -76,6 +77,11 @@ type TableColumns struct {
 
 type TableRows struct {
 	Id []uint `json:"id"`
+}
+
+type UserRole struct {
+	Email string
+	Role  string
 }
 
 func init() {
@@ -548,9 +554,10 @@ func PurgeDoc(docId string, nbHisto int) {
 	}
 }
 
-func ImportUser(email string, orgId int, workspaceName string, role string) {
-	// Import a user into a workspace with a role
+func ImportUsers(orgId int, workspaceName string, users []UserRole) {
+	// Import a list of user & role into a workspace
 
+	// Search workspace by name in org
 	lstWorkspaces := GetOrgWorkspaces(orgId)
 	idWorkspace := 0
 	for _, ws := range lstWorkspaces {
@@ -558,18 +565,22 @@ func ImportUser(email string, orgId int, workspaceName string, role string) {
 			idWorkspace = ws.Id
 		}
 	}
+
 	if idWorkspace == 0 {
 		idWorkspace = CreateWorkspace(orgId, workspaceName)
 	}
 	if idWorkspace == 0 {
 		fmt.Printf("Unable to create workspace %s\n", workspaceName)
 	} else {
-		ws := GetWorkspace(idWorkspace)
-
 		url := fmt.Sprintf("workspaces/%d/access", idWorkspace)
-		data := fmt.Sprintf(`{"delta": {"users": {"%s": "%s"}}}`, email, role)
 
-		body, status := httpPatch(url, data)
+		roleLine := []string{}
+		for _, role := range users {
+			roleLine = append(roleLine, fmt.Sprintf(`"%s": "%s"`, role.Email, role.Role))
+		}
+		patch := fmt.Sprintf(`{	"delta": { "users": {%s}}}`, strings.Join(roleLine, ","))
+
+		body, status := httpPatch(url, patch)
 
 		var result string
 		if status == http.StatusOK {
@@ -577,7 +588,7 @@ func ImportUser(email string, orgId int, workspaceName string, role string) {
 		} else {
 			result = fmt.Sprintf("❗️ (%s)", body)
 		}
-		fmt.Printf("Import %s in %s workspace (n°%d) with %s role\t : %s\n", email, ws.Name, ws.Id, role, result)
+		fmt.Printf("Import %d users in workspace n°%d\t : %s\n", len(users), idWorkspace, result)
 	}
 
 }

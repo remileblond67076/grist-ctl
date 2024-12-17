@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"gristctl/common"
+	"gristctl/gristapi"
 	"os"
 	"strconv"
 	"strings"
@@ -67,29 +68,19 @@ func ImportUsers() {
 
 	workspaces := usersDf.GroupBy("OrgId", "WorkspaceName")
 	for group, users := range workspaces.GetGroups() {
+		var roles []gristapi.UserRole
 		line := strings.Split(group, "_")
 		orgId, orgErr := strconv.Atoi(line[0])
 		if orgErr != nil {
 			Help()
 		}
 		workspaceId := line[1]
-		fmt.Printf("Org: %d, Workspace : %s\n", orgId, workspaceId)
 		for i, user := range users.Select([]string{"Mail", "Role"}).Records() {
 			if i > 0 {
-				fmt.Printf("  - %s --> %s\n", user[0], user[1])
+				newRole := gristapi.UserRole{user[0], user[1]}
+				roles = append(roles, newRole)
 			}
 		}
+		gristapi.ImportUsers(orgId, workspaceId, roles)
 	}
-	// var wg sync.WaitGroup
-	// func() {
-	// wg.Add(1)
-	// 	defer wg.Done()
-	// 	gristapi.ImportUser(
-	// 		email,
-	// 		orgId,
-	// 		workspaceName,
-	// 		role,
-	// 	)
-	// }()
-	// wg.Wait()
 }
