@@ -3,18 +3,7 @@
 Command-line tool for managing a [Grist](https://www.getgrist.com/) instance.
 Based on [Grist's REST APIs](https://support.getgrist.com/api/).
 
-## Configuration
-
-Set up a `$HOME/.gristctl` file containing the following information:
-
-```ini
-GRIST_TOKEN="user session token"
-GRIST_URL="https://<GRIST server URL, without /api>"
-```
-
 ## Usage
-
-### General
 
 List of commands :
 
@@ -29,6 +18,17 @@ List of commands :
 - `delete user <id>` : delete a user
 - `import users` : imports users from standard input
 - `get users` : displays all user rights
+
+## Configuration
+
+Set up a `$HOME/.gristctl` file containing the following information:
+
+```ini
+GRIST_TOKEN="user session token"
+GRIST_URL="https://<GRIST server URL, without /api>"
+```
+
+## Examples of usages
 
 ### Import users from an ActiveDirectory directory
 
@@ -54,7 +54,7 @@ cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;S
 Launch unit tests with the following command :
 
 ```bash
-go test .
+go test -race $(go list ./... | grep -v /vendor/)
 ```
 
 ### Compilation
