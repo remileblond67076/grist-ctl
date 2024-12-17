@@ -1,5 +1,8 @@
 # GRIST-cli : GRIST API tool
 
+Command-line tool for managing a [Grist](https://www.getgrist.com/) instance.
+Based on [Grist's REST APIs](https://support.getgrist.com/api/).
+
 ## Configuration
 
 Set up a `$HOME/.gristctl` file containing the following information:
