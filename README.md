@@ -2,7 +2,7 @@
 
 **[Grist](https://www.getgrist.com/)** is a flexible platform for building and managing custom data applications. It combines the power of a relational database with the flexibility of a spreadsheet, allowing users to build sophisticated data workflows, collaborate in real-time, and automate processes—all in a no-code environment. Whether you're building a CRM, project management tool, or custom data tracker, Grist provides a powerful interface for data management.
 
-![](grist-logo.png)
+![GRIST logo](grist-logo.png)
 
 **gristctl** is a command-line tool for interacting with Grist. It enables users to automate and manage various tasks related to Grist documents, such as creating, updating, listing, and deleting documents, as well as fetching data from them.
 
