@@ -15,8 +15,10 @@ jobs:
         run: go get .
       - name: Build for Linux
         run: go build -v .
+      - name: Build for Windows
+        run: GOOS=windows GOARCH=amd64 go build -v .
       - name: Archive exec file
         uses: actions/upload-artifact@v4
         with:
           name: gristctl
-          path: ./gristctl
+          path: ./gristctl*
