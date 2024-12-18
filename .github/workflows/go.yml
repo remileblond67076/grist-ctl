@@ -13,12 +13,37 @@ jobs:
           go-version: '1.23.3'
       - name: Install dependencies
         run: go get .
-      - name: Build for Linux
-        run: go build -v .
-      - name: Build for Windows
-        run: GOOS=windows GOARCH=amd64 go build -v .
+      - name: Build for Linux, Windows and Mac
+        run: |
+          mkdir -p build/linux-amd64
+          mkdir -p build/windows-amd64
+          mkdir -p build/mac-amd64
+          mkdir -p build/mac-arm64
+          GOOS=linux   GOARCH=amd64 go build -o build/linux-amd64/gristctl .
+          GOOS=darwin  GOARCH=amd64 go build -o build/mac-amd64/gristctl .
+          GOOS=darwin  GOARCH=arm64 go build -o build/mac-arm64/gristctl .
+          GOOS=windows GOARCH=amd64 go build -o build/windows-amd64/gristctl.exe .
       - name: Archive exec file
         uses: actions/upload-artifact@v4
         with:
           name: gristctl
-          path: ./gristctl*
+          path: build/
+  release:
+    name: Release Executables
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      # Étape 1 : Vérifier le dépôt
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Étape 2 : Publier un Release avec les fichiers
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: build/*
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          allowUpdates: true
