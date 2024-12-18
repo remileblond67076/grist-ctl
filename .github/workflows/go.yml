@@ -23,7 +23,7 @@ jobs:
           GOOS=darwin  GOARCH=amd64 go build -o build/mac-amd64/gristctl .
           GOOS=darwin  GOARCH=arm64 go build -o build/mac-arm64/gristctl .
           GOOS=windows GOARCH=amd64 go build -o build/windows-amd64/gristctl.exe .
-          zip -r exec_files.zip build
+          zip -r exec_files.zip build/*
       - name: Archive exec file
         uses: actions/upload-artifact@v4
         with:
