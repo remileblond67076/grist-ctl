@@ -83,6 +83,24 @@ List of commands :
 - `import users` : imports users from standard input
 - `get users` : displays all user rights
 
+### Configure grist connexion
+
+```bash
+$ gristctl config
+----------------------------------------------------------------------------------
+Setting the url and token for access to the grist server (/Users/me/.gristctl)
+----------------------------------------------------------------------------------
+Actual URL : https://wpgrist.cus.fr
+Token : ✅
+Would you like to configure (Y/N) ?
+y
+Grist server URL (https://......... without '/' in the end): https://grist.numerique.gouv.fr 
+User token : secrettoken
+Url : https://grist.numerique.gouv.fr --- Token: secrettoken
+Is it OK (Y/N) ? y
+Config saved in /Users/me/.gristctl
+```
+
 ### List Grist organization
 
 To list all available Grist organization:
