@@ -72,7 +72,6 @@ List of commands :
 - `import users` : imports users from standard input
 - `get users` : displays all user rights
 
-
 ### List Grist organization
 
 To list all available Grist organization:
@@ -126,7 +125,7 @@ cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;S
 
 We welcome contributions to gristctl. If you find a bug or want to improve the tool, feel free to open an issue or submit a pull request.
 
-### Steps for contributing:
+### Steps for contributing
 
 1. Fork the repository.
 2. Create a new branch for your feature or bug fix.
@@ -137,4 +136,4 @@ Please ensure that your code adheres to the project's coding style and includes 
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License
