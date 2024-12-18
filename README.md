@@ -54,7 +54,7 @@ To install `gristctl` from source:
 You can configure `gristctl` with the following command :
 
 ```bash
-gristclt config
+gristctl config
 ```
 
 #### Manually
