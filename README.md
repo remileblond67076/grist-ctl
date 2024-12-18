@@ -58,13 +58,13 @@ gristctl config
 ```
 
 #### Manually
+
 Create a `.gristctl` file in your home directory containing the following information:
 
 ```ini
 GRIST_TOKEN="user session token"
 GRIST_URL="https://<GRIST server URL, without /api>"
 ```
-
 
 ## Usage
 
