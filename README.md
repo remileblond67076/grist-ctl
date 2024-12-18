@@ -17,7 +17,7 @@ To get started with `gristctl`, follow the steps below to install the tool on yo
 
 ### Installing from exec files
 
-Download exec files from [release](https://github.com/Ville-Eurometropole-Strasbourg/gristctl/releases/download/main/exec_files.zip). Extract the archive and copy the `gristctl` file corresponding to your runtime environment into a directory in your PATH.
+Download exec files from [release](https://github.com/Ville-Eurometropole-Strasbourg/gristctl/releases). Extract the archive and copy the `gristctl` file corresponding to your runtime environment into a directory in your PATH.
 
 ### Installing from Source
 
