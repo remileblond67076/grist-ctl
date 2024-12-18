@@ -15,6 +15,7 @@ import (
 func Help() {
 	common.DisplayTitle("GRIST : API querying")
 	fmt.Println(`Accepted orders :
+- config : configure url & token of Grist server
 - get org : organization list
 - get org <id> : organization details
 - get doc <id> : document details
@@ -27,6 +28,50 @@ func Help() {
 - import users : imports users from standard input
 - get users : displays all user rights`)
 	os.Exit(0)
+}
+
+func Config() {
+	configFile := gristapi.GetConfig()
+	common.DisplayTitle(fmt.Sprintf("Setting the url and token for access to the grist server (%s)", configFile))
+	fmt.Printf("Actual URL : %s\n", os.Getenv("GRIST_URL"))
+	token := "✅"
+	if os.Getenv("GRIST_TOKEN") == "" {
+		token = "❌"
+	}
+	fmt.Printf("Token : %s\n", token)
+	fmt.Println("Would you like to configure (Y/N) ?")
+	var goConfig string
+	fmt.Scanln(&goConfig)
+
+	switch response := strings.ToLower(goConfig); response {
+	case "y":
+		fmt.Print("Grist server URL (https://......... without '/' in the end): ")
+		var url string
+		fmt.Scanln(&url)
+		fmt.Print("User token : ")
+		var token string
+		fmt.Scanln(&token)
+		fmt.Printf("Url : %s --- Token: %s\nIs it OK (Y/N) ? ", url, token)
+		var ok string
+		fmt.Scanln(&ok)
+		switch strings.ToLower(ok) {
+		case "y":
+			f, err := os.Create(configFile)
+			if err != nil {
+				fmt.Printf("Error on creating %s file (%s)", configFile, err)
+				os.Exit(-1)
+			}
+			defer f.Close()
+			config := fmt.Sprintf("GRIST_URL=\"%s\"\nGRIST_TOKEN=\"%s\"\n", url, token)
+			f.WriteString(config)
+
+			fmt.Printf("Config saved in %s\n", configFile)
+		default:
+			os.Exit(0)
+		}
+	default:
+		fmt.Println("On ne fait rien...")
+	}
 }
 
 func ImportUsers() {

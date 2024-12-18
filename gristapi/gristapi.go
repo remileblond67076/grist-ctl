@@ -84,15 +84,21 @@ type UserRole struct {
 	Role  string
 }
 
-func init() {
+func GetConfig() string {
+	// Apply config and return the config file path
 	home := os.Getenv("HOME")
 	configFile := filepath.Join(home, ".gristctl")
 	if os.Getenv("GRIST_TOKEN") == "" || os.Getenv("GRIST_URL") == "" {
 		err := godotenv.Load(configFile)
 		if err != nil {
-			log.Fatalf("Error reading configuration file : %s\n", err)
+			fmt.Printf("Error reading configuration file : %s\n", err)
 		}
 	}
+	return configFile
+}
+
+func init() {
+	GetConfig()
 }
 
 func httpRequest(action string, myRequest string, data *bytes.Buffer) (string, int) {
