@@ -1,4 +1,4 @@
-# GRISTctl - Command Line Interface (CLI) for Grist
+# GRIST-ctl - Command Line Interface (CLI) for Grist
 
 **[Grist](https://www.getgrist.com/)** is a versatile platform for creating and managing custom data applications. It blends the capabilities of a relational database with the adaptability of a spreadsheet, empowering users to design advanced data workflows, collaborate in real-time, and automate tasks—all without requiring code.
 
