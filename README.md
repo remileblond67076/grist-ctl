@@ -49,6 +49,15 @@ To install `gristctl` from source:
 
 ### Configuring
 
+#### Interactively
+
+You can configure `gristctl` with the following command :
+
+```bash
+gristclt config
+```
+
+#### Manually
 Create a `.gristctl` file in your home directory containing the following information:
 
 ```ini
@@ -56,10 +65,12 @@ GRIST_TOKEN="user session token"
 GRIST_URL="https://<GRIST server URL, without /api>"
 ```
 
+
 ## Usage
 
 List of commands :
 
+- `config`: configure gristctl
 - `get org` : organization list
 - `get org <id>` : organization details
 - `get doc <id>` : document details
