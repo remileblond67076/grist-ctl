@@ -28,17 +28,6 @@ jobs:
         with:
           name: gristctl
           path: build/
-  release:
-    name: Release Executables
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      # Étape 1 : Vérifier le dépôt
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Étape 2 : Publier un Release avec les fichiers
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
