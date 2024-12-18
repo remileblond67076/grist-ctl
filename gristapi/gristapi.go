@@ -88,12 +88,10 @@ func init() {
 	home := os.Getenv("HOME")
 	configFile := filepath.Join(home, ".gristctl")
 	if os.Getenv("GRIST_TOKEN") == "" || os.Getenv("GRIST_URL") == "" {
-		fmt.Printf("Reading %s config file...", configFile)
 		err := godotenv.Load(configFile)
 		if err != nil {
 			log.Fatalf("Error reading configuration file : %s\n", err)
 		}
-		fmt.Println("OK")
 	}
 }
 
@@ -341,12 +339,11 @@ func DisplayDoc(docId string) {
 	}
 
 	title := color.New(color.FgRed).SprintFunc()
-	fmt.Printf("\nDocument %s (%s)", title(doc.Name), doc.Id)
+	pinned := ""
 	if doc.IsPinned {
-		fmt.Printf(" 📌\n")
-	} else {
-		fmt.Printf("\n")
+		pinned = "📌"
 	}
+	common.DisplayTitle(fmt.Sprintf("Document %s (%s) %s", title(doc.Name), doc.Id, pinned))
 
 	var tables Tables = GetDocTables(docId)
 	fmt.Printf("Contains %d tables\n", len(tables.Tables))
@@ -380,7 +377,7 @@ func DisplayDoc(docId string) {
 	wg.Wait()
 	var details []string
 	for _, table_details := range tables_details {
-		ligne := fmt.Sprintf("- %s : %d lignes, %d colonnes\n", title(table_details.name), table_details.nb_rows, table_details.nb_cols)
+		ligne := fmt.Sprintf("- %s : %d lines, %d colomns\n", title(table_details.name), table_details.nb_rows, table_details.nb_cols)
 		for _, col_name := range table_details.cols_names {
 			ligne = ligne + fmt.Sprintf("  - %s\n", col_name)
 		}
@@ -396,7 +393,6 @@ func DisplayOrgs() {
 	// Displays the list of accessible organizations
 
 	lstOrgs := GetOrgs()
-	fmt.Printf("%d organisations found:\n\n", len(lstOrgs))
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
 	fmt.Fprintln(w, "Id\tNom")
 	for _, org := range lstOrgs {
@@ -417,12 +413,11 @@ func DisplayOrg(orgId string) {
 	var lstWsDesc []wpDesc
 
 	org := GetOrg(orgId)
-	common.DisplayTitle(fmt.Sprintf("Organisation n°%d : %s", org.Id, org.Name))
 	worskspaces := GetOrgWorkspaces(org.Id)
+	common.DisplayTitle(fmt.Sprintf("Organization n°%d : %s (%d workspaces)", org.Id, org.Name, len(worskspaces)))
 
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
-	fmt.Printf("%d workspaces\n\n", len(worskspaces))
-	fmt.Fprintln(w, "Workspace Id\tWorkspace name\tNb doc\tNb of direct users")
+	fmt.Fprintln(w, "Workspace Id\tWorkspace name\tDoc\tDirect users")
 	var wg sync.WaitGroup
 	for _, ws := range worskspaces {
 		func() {
@@ -450,7 +445,7 @@ func DisplayWorkspace(workspaceId int) {
 	// Affiche des détails d'un Workspace
 
 	ws := GetWorkspace(workspaceId)
-	common.DisplayTitle(fmt.Sprintf("Organisation n°%d : %s\nWorkspace n°%d : %s", ws.Org.Id, ws.Org.Name, ws.Id, ws.Name))
+	common.DisplayTitle(fmt.Sprintf("Organization n°%d : \"%s\", workspace n°%d : \"%s\"", ws.Org.Id, ws.Org.Name, ws.Id, ws.Name))
 
 	if len(ws.Docs) > 0 {
 		fmt.Printf("Contains %d documents :\n", len(ws.Docs))
@@ -459,7 +454,7 @@ func DisplayWorkspace(workspaceId int) {
 		for _, doc := range ws.Docs {
 			pin := ""
 			if doc.IsPinned {
-				pin = "✅"
+				pin = "📌"
 			}
 			fmt.Fprintf(w, "%s\t%s\t%s\n", doc.Id, doc.Name, pin)
 		}

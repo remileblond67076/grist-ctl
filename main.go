@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 
@@ -45,7 +44,6 @@ func main() {
 						switch len(args) {
 						case 3:
 							docId := args[2]
-							fmt.Printf("Affichage du document %s", docId)
 							gristapi.DisplayDoc(docId)
 						case 4:
 							if args[3] == "access" {
