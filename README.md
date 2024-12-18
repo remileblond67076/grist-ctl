@@ -12,8 +12,12 @@ To get started with `gristctl`, follow the steps below to install the tool on yo
 
 ### Prerequisites
 
-- Ensure you have a [working installation of Go](https://golang.org/doc/install) (version 1.16 or later).
+- If you want to build from sources, ensure you have a [working installation of Go](https://golang.org/doc/install) (version 1.23 or later).
 - You should also have access to a Grist instance.
+
+### Installing from exec files
+
+Download exec files from [release](https://github.com/Ville-Eurometropole-Strasbourg/gristctl/releases/download/main/exec_files.zip). Extract the archive and copy the `gristctl` file corresponding to your runtime environment into a directory in your PATH.
 
 ### Installing from Source
 
