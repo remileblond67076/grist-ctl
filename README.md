@@ -6,6 +6,123 @@
 
 **gristctl** is a command-line utility designed for interacting with Grist. It allows users to automate and manage tasks related to Grist documents, including creating, updating, listing, deleting documents, and retrieving data from them.
 
+## Usage
+
+List of commands :
+
+- `config`: configure gristctl
+- `get org` : organization list
+- `get org <id>` : organization details
+- `get doc <id>` : document details
+- `get doc <id> access` : list of document access rights
+- `purge doc <id> [<number of states to keep>]`: purges document history (retains last 3 operations by default)
+- `get workspace <id>`: workspace details
+- `get workspace <id> access`: list of workspace access rights
+- `delete workspace <id>` : delete a workspace
+- `delete user <id>` : delete a user
+- `import users` : imports users from standard input
+- `get users` : displays all user rights
+
+### Configure grist connexion
+
+```bash
+$ gristctl config
+----------------------------------------------------------------------------------
+Setting the url and token for access to the grist server (/Users/me/.gristctl)
+----------------------------------------------------------------------------------
+Actual URL : https://wpgrist.cus.fr
+Token : ✅
+Would you like to configure (Y/N) ?
+y
+Grist server URL (https://......... without '/' in the end): https://grist.numerique.gouv.fr 
+User token : secrettoken
+Url : https://grist.numerique.gouv.fr --- Token: secrettoken
+Is it OK (Y/N) ? y
+Config saved in /Users/me/.gristctl
+```
+
+### List Grist organization
+
+To list all available Grist organization:
+
+```bash
+$ gristctl get org
+Id    Nom
+2     Personal
+3     ems
+```
+
+### Displays information about an organization
+
+Example : get organization n°3 information, including the list of his workspaces :
+
+```bash
+$ gristctl get org 3
+---------------------------------------
+Organization n°3 : ems (30 workspaces)
+---------------------------------------
+Workspace Id    Workspace name                        Doc    Direct users
+658             Cellule dev et interopérabilité       1      3
+676             Cellule Stratégie Logiciels Libres    1      1
+351             Direction-CLT                         2      3
+...
+```
+
+### Describe a workspace
+
+To fetch data from a Grist workspace with ID 676, including the list of his documents:
+
+```bash
+$ gristctl get workspace 676
+-----------------------------------------------------------------------------------
+Organization n°3 : "ems", workspace n°676 : "Cellule Stratégie Logiciels Libres"
+-----------------------------------------------------------------------------------
+Contains 1 documents :
+Id                         Name           Pinned
+b8RzZzAJ4JgPWN1HKFTb48     Ressources     📌
+```
+
+### View workspace access rights
+
+```bash
+$ gristctl get workspace 676 access
+--------------------------------------------------------------------
+Workspace n°676 access rights : Cellule Stratégie Logiciels Libres
+--------------------------------------------------------------------
+Full inheritance of rights from the next level up
+
+Accessible to the following users :
+Id      Nom               Email                           Inherited access     Direct access
+5       xxxxx xxxxxx      xxx.xxxxxxxx@strasbourg.eu      owners               
+237     xxxxxx xxxxxx     xxxxx.xxxxxxx@strasbourg.eu     owners               owners
+2 users
+```
+
+### Delete a workspace
+
+To delete a Grist workspace with ID 676:
+
+```bash
+gristctl delete workspace 676
+```
+
+### Import users from an ActiveDirectory directory
+
+Extract the list of members of AD groups GA_GRIST_PU and GA_GRIST_PA :
+
+```powershell
+foreach ($grp in ('a', 'u')) {
+    get-adgroupmember ga_grist_p$grp | get-aduser -properties mail, extensionAttribute6, extensionAttribute15 |select-object mail, extensionAttribute6, extensionAttribute15 | export-csv -Path ga_grist_p$grp.csv -NoTypeInformation -Encoding:UTF8
+}
+```
+
+```bash
+cat ga_grist_pu.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Direction-"$2";viewers"}' | ./gristctl import users
+cat ga_grist_pu.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Service-"$3";viewers"}' | ./gristctl import users
+cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Direction-"$2";editors"}' | ./gristctl import users
+cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Service-"$3";editors"}' | ./gristctl import users
+```
+
 ## Installation
 
 To get started with `gristctl`, follow the steps below to install the tool on your machine.
@@ -64,90 +181,6 @@ Create a `.gristctl` file in your home directory containing the following inform
 ```ini
 GRIST_TOKEN="user session token"
 GRIST_URL="https://<GRIST server URL, without /api>"
-```
-
-## Usage
-
-List of commands :
-
-- `config`: configure gristctl
-- `get org` : organization list
-- `get org <id>` : organization details
-- `get doc <id>` : document details
-- `get doc <id> access` : list of document access rights
-- `purge doc <id> [<number of states to keep>]`: purges document history (retains last 3 operations by default)
-- `get workspace <id>`: workspace details
-- `get workspace <id> access`: list of workspace access rights
-- `delete workspace <id>` : delete a workspace
-- `delete user <id>` : delete a user
-- `import users` : imports users from standard input
-- `get users` : displays all user rights
-
-### Configure grist connexion
-
-```bash
-$ gristctl config
-----------------------------------------------------------------------------------
-Setting the url and token for access to the grist server (/Users/me/.gristctl)
-----------------------------------------------------------------------------------
-Actual URL : https://wpgrist.cus.fr
-Token : ✅
-Would you like to configure (Y/N) ?
-y
-Grist server URL (https://......... without '/' in the end): https://grist.numerique.gouv.fr 
-User token : secrettoken
-Url : https://grist.numerique.gouv.fr --- Token: secrettoken
-Is it OK (Y/N) ? y
-Config saved in /Users/me/.gristctl
-```
-
-### List Grist organization
-
-To list all available Grist organization:
-
-```bash
-gristctl get org
-```
-
-### Displays information about an organization
-
-Example : get organization n°3 information, including the list of his workspaces :
-
-```bash
-gristctl get org 3
-```
-
-### Fetch Data from a workspace
-
-To fetch data from a Grist workspace with ID 1234, including the list of his documents:
-
-```bash
-gristctl get workspace 1234
-```
-
-### Delete a workspace
-
-To delete a Grist workspace with ID 1234:
-
-```bash
-gristctl delete workspace 1234
-```
-
-### Import users from an ActiveDirectory directory
-
-Extract the list of members of AD groups GA_GRIST_PU and GA_GRIST_PA :
-
-```powershell
-foreach ($grp in ('a', 'u')) {
-    get-adgroupmember ga_grist_p$grp | get-aduser -properties mail, extensionAttribute6, extensionAttribute15 |select-object mail, extensionAttribute6, extensionAttribute15 | export-csv -Path ga_grist_p$grp.csv -NoTypeInformation -Encoding:UTF8
-}
-```
-
-```bash
-cat ga_grist_pu.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Direction-"$2";viewers"}' | ./gristctl import users
-cat ga_grist_pu.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Service-"$3";viewers"}' | ./gristctl import users
-cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Direction-"$2";editors"}' | ./gristctl import users
-cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Service-"$3";editors"}' | ./gristctl import users
 ```
 
 ## Contributing
