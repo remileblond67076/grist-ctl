@@ -4,20 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"gristctl/common"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
-	"slices"
-	"sort"
 	"strconv"
 	"strings"
-	"sync"
-	"text/tabwriter"
 
-	"github.com/fatih/color"
+	"github.com/go-gota/gota/dataframe"
 	"github.com/joho/godotenv"
 )
 
@@ -197,19 +192,6 @@ func GetOrgAccess(idOrg string) []User {
 	return lstUsers.Users
 }
 
-func DisplayOrgAccess(idOrg string) {
-	// Displays the list of users with access to an organization
-
-	lstUsers := GetOrgAccess(idOrg)
-	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, '|', 0)
-	fmt.Fprintln(w, "Id\tNom")
-	for _, user := range lstUsers {
-		fmt.Fprintf(w, "%s\t%s\t%s\n", user.Email, user.Name, user.Access)
-	}
-	w.Flush()
-	fmt.Printf("%d utilisateurs\n", len(lstUsers))
-}
-
 func GetOrgWorkspaces(orgId int) []Workspace {
 	// Retrieves information on a specific organization
 	lstWorkspaces := []Workspace{}
@@ -326,178 +308,6 @@ func GetTableRows(docId string, tableId string) TableRows {
 	return rows
 }
 
-func DisplayDoc(docId string) {
-	// Displays detailed information about a document
-	// - Document name
-	// - Number of tables
-	// For each table :
-	// - Number of columns
-	// - Number of rows
-	// - List of columns
-
-	doc := GetDoc(docId)
-
-	type TableDetails struct {
-		name       string
-		nb_rows    int
-		nb_cols    int
-		cols_names []string
-	}
-
-	title := color.New(color.FgRed).SprintFunc()
-	pinned := ""
-	if doc.IsPinned {
-		pinned = "📌"
-	}
-	common.DisplayTitle(fmt.Sprintf("Document %s (%s) %s", title(doc.Name), doc.Id, pinned))
-
-	var tables Tables = GetDocTables(docId)
-	fmt.Printf("Contains %d tables\n", len(tables.Tables))
-	var wg sync.WaitGroup
-	var tables_details []TableDetails
-	for _, table := range tables.Tables {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			table_desc := ""
-			columns := GetTableColumns(docId, table.Id)
-			rows := GetTableRows(docId, table.Id)
-
-			var cols_names []string
-			for _, col := range columns.Columns {
-				cols_names = append(cols_names, col.Id)
-			}
-			slices.Sort(cols_names)
-			for _, col := range cols_names {
-				table_desc += fmt.Sprintf("%s ", col)
-			}
-			table_info := TableDetails{
-				name:       table.Id,
-				nb_rows:    len(rows.Id),
-				nb_cols:    len(columns.Columns),
-				cols_names: cols_names,
-			}
-			tables_details = append(tables_details, table_info)
-		}()
-	}
-	wg.Wait()
-	var details []string
-	for _, table_details := range tables_details {
-		ligne := fmt.Sprintf("- %s : %d lines, %d colomns\n", title(table_details.name), table_details.nb_rows, table_details.nb_cols)
-		for _, col_name := range table_details.cols_names {
-			ligne = ligne + fmt.Sprintf("  - %s\n", col_name)
-		}
-		details = append(details, ligne)
-	}
-	sort.Strings(details)
-	for _, ligne := range details {
-		fmt.Printf("%s", ligne)
-	}
-}
-
-func DisplayOrgs() {
-	// Displays the list of accessible organizations
-
-	lstOrgs := GetOrgs()
-	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
-	fmt.Fprintln(w, "Id\tNom")
-	for _, org := range lstOrgs {
-		fmt.Fprintf(w, "%d\t%s\n", org.Id, org.Name)
-	}
-	w.Flush()
-}
-
-func DisplayOrg(orgId string) {
-	// Displays details about an organization
-
-	type wpDesc struct {
-		id     int
-		name   string
-		nbDoc  int
-		nbUser int
-	}
-	var lstWsDesc []wpDesc
-
-	org := GetOrg(orgId)
-	worskspaces := GetOrgWorkspaces(org.Id)
-	common.DisplayTitle(fmt.Sprintf("Organization n°%d : %s (%d workspaces)", org.Id, org.Name, len(worskspaces)))
-
-	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
-	fmt.Fprintln(w, "Workspace Id\tWorkspace name\tDoc\tDirect users")
-	var wg sync.WaitGroup
-	for _, ws := range worskspaces {
-		func() {
-			defer wg.Done()
-			wg.Add(1)
-			users := GetWorkspaceAccess(ws.Id)
-			nbUsers := 0
-			for _, user := range users.Users {
-				if user.Access != "" {
-					nbUsers += 1
-				}
-			}
-			lstWsDesc = append(lstWsDesc, wpDesc{ws.Id, ws.Name, len(ws.Docs), nbUsers})
-		}()
-	}
-	wg.Wait()
-
-	for _, desc := range lstWsDesc {
-		fmt.Fprintf(w, "%d\t%s\t%d\t%d\n", desc.id, desc.name, desc.nbDoc, desc.nbUser)
-	}
-	w.Flush()
-}
-
-func DisplayWorkspace(workspaceId int) {
-	// Affiche des détails d'un Workspace
-
-	ws := GetWorkspace(workspaceId)
-	common.DisplayTitle(fmt.Sprintf("Organization n°%d : \"%s\", workspace n°%d : \"%s\"", ws.Org.Id, ws.Org.Name, ws.Id, ws.Name))
-
-	if len(ws.Docs) > 0 {
-		fmt.Printf("Contains %d documents :\n", len(ws.Docs))
-		w := tabwriter.NewWriter(os.Stdout, 1, 1, 5, ' ', 0)
-		fmt.Fprintf(w, "Id\tName\tPinned\n")
-		for _, doc := range ws.Docs {
-			pin := ""
-			if doc.IsPinned {
-				pin = "📌"
-			}
-			fmt.Fprintf(w, "%s\t%s\t%s\n", doc.Id, doc.Name, pin)
-		}
-		w.Flush()
-	} else {
-		fmt.Println("No documents")
-	}
-}
-
-func DisplayWorkspaceAccess(workspaceId int) {
-	// Displays workspace access rights
-
-	ws := GetWorkspace((workspaceId))
-	wsa := GetWorkspaceAccess(workspaceId)
-
-	common.DisplayTitle(fmt.Sprintf("Workspace n°%d access rights : %s", ws.Id, ws.Name))
-	displayRole(wsa.MaxInheritedRole)
-
-	nbUsers := len(wsa.Users)
-	if nbUsers <= 0 {
-		fmt.Println("Accessible to no user")
-	} else {
-		nbUser := 0
-		fmt.Println("\nAccessible to the following users :")
-		w := tabwriter.NewWriter(os.Stdout, 5, 1, 5, ' ', 0)
-		fmt.Fprintf(w, "Id\tNom\tEmail\tInherited access\tDirect access\n")
-		for _, user := range wsa.Users {
-			if user.Access != "" || user.ParentAccess != "" {
-				fmt.Fprintf(w, "%d\t%s\t%s\t%s\t%s\n", user.Id, user.Name, user.Email, user.ParentAccess, user.Access)
-				nbUser += 1
-			}
-		}
-		w.Flush()
-		fmt.Printf("%d users\n", nbUser)
-	}
-}
-
 func GetDocAccess(docId string) EntityAccess {
 	// Returns the list of users with access to the document
 
@@ -506,42 +316,6 @@ func GetDocAccess(docId string) EntityAccess {
 	response := httpGet(url, "")
 	json.Unmarshal([]byte(response), &lstUsers)
 	return lstUsers
-}
-
-func displayRole(role string) {
-	// User role translation
-
-	switch role {
-	case "":
-		fmt.Println("No inheritance of rights from upper level")
-	case "owners":
-		fmt.Println("Full inheritance of rights from the next level up")
-	case "editors":
-		fmt.Println("Inherit display and edit rights from higher level")
-	case "viewers":
-		fmt.Println("Inheritance of consultation rights from higher level")
-	default:
-		fmt.Printf("Inheritance level : %s\n", role)
-	}
-}
-
-func DisplayDocAccess(docId string) {
-	// Displays users with access to a document
-
-	doc := GetDoc(docId)
-	title := fmt.Sprintf("Workspace \"%s\" (n°%d)\nDocument \"%s\"\n", doc.Workspace.Name, doc.Workspace.Id, doc.Name)
-	fmt.Println(title)
-	docAccess := GetDocAccess(docId)
-	displayRole(docAccess.MaxInheritedRole)
-	fmt.Printf("\nDirect users:\n")
-	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
-	fmt.Fprintln(w, "Id\tEmail\tNom\tInherited access\tDirect access")
-	for _, user := range docAccess.Users {
-		if user.Access != "" {
-			fmt.Fprintf(w, "%d\t%s\t%s\t%s\t%s\n", user.Id, user.Email, user.Name, user.ParentAccess, user.Access)
-		}
-	}
-	w.Flush()
 }
 
 func PurgeDoc(docId string, nbHisto int) {
@@ -610,25 +384,6 @@ func CreateWorkspace(orgId int, workspaceName string) int {
 	return idWorkspace
 }
 
-func DisplayUserMatrix() {
-	// Displaying the rights matrix
-
-	lstOrg := GetOrgs()
-	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
-	fmt.Fprintf(w, "Id\tName\tAccess\tWokspace id\tWorkspace name\n")
-	for _, org := range lstOrg {
-		common.DisplayTitle(fmt.Sprintf("Org %s (%d)", org.Name, org.Id))
-		for _, ws := range GetOrgWorkspaces(org.Id) {
-			for _, user := range GetWorkspaceAccess(ws.Id).Users {
-				if user.Access != "" {
-					fmt.Fprintf(w, "%d\t%s\t%s\t%s\t%d\n", user.Id, user.Email, user.Access, ws.Name, ws.Id)
-				}
-			}
-		}
-	}
-	w.Flush()
-}
-
 func ExportDocGrist(docId string) {
 	// Export doc in Grist format (Sqlite)
 	url := fmt.Sprintf("docs/%s/download", docId)
@@ -641,4 +396,27 @@ func ExportDocExcel(docId string) {
 	url := fmt.Sprintf("docs/%s/download/xlsx", docId)
 	file := httpGet(url, "")
 	fmt.Println(file)
+}
+
+func GetTableContent(docId string, tableName string) dataframe.DataFrame {
+	// Returns table content as Dataframe
+	url := fmt.Sprintf("docs/%s/tables/%s/records", docId, tableName)
+	response := httpGet(url, "")
+	type GristRecord struct {
+		ID     int            `json:"id"`
+		Fields map[string]any `json:"fields"`
+	}
+
+	type GristResponse struct {
+		Records []GristRecord `json:"records"`
+	}
+
+	var gristResponse GristResponse
+	err := json.Unmarshal([]byte(response), &gristResponse)
+	if err != nil {
+		log.Fatalf("Erreur lors du décodage du JSON: %v", err)
+	}
+
+	df := dataframe.LoadStructs(gristResponse.Records)
+	return df
 }

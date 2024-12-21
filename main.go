@@ -26,15 +26,15 @@ func main() {
 					{
 						switch nb := len(args); nb {
 						case 2:
-							gristapi.DisplayOrgs()
+							gristtools.DisplayOrgs()
 						case 3:
 							orgId := args[2]
-							gristapi.DisplayOrg(orgId)
+							gristtools.DisplayOrg(orgId)
 						case 4:
 							switch args[3] {
 							case "access":
 								orgId := args[2]
-								gristapi.DisplayOrgAccess(orgId)
+								gristtools.DisplayOrgAccess(orgId)
 							default:
 								gristtools.Help()
 							}
@@ -47,18 +47,27 @@ func main() {
 						switch len(args) {
 						case 3:
 							docId := args[2]
-							gristapi.DisplayDoc(docId)
+							gristtools.DisplayDoc(docId)
 						case 4:
 							docId := args[2]
 							switch args[3] {
 							case "access":
-								gristapi.DisplayDocAccess(docId)
+								gristtools.DisplayDocAccess(docId)
 							case "grist":
 								gristapi.ExportDocGrist(docId)
 							case "excel":
 								gristapi.ExportDocExcel(docId)
 							default:
 								fmt.Println("You have to choose between 'access', 'grist', or 'excel'")
+							}
+						case 5:
+							docId := args[2]
+							switch args[3] {
+							case "table":
+								tableName := args[4]
+								gristtools.DisplayTableRecords(docId, tableName)
+							default:
+								gristtools.Help()
 							}
 
 						default:
@@ -71,13 +80,13 @@ func main() {
 						case 3:
 							worskspaceId, err := strconv.Atoi(args[2])
 							if err == nil {
-								gristapi.DisplayWorkspace(worskspaceId)
+								gristtools.DisplayWorkspace(worskspaceId)
 							}
 						case 4:
 							if args[3] == "access" {
 								worskspaceId, err := strconv.Atoi(args[2])
 								if err == nil {
-									gristapi.DisplayWorkspaceAccess(worskspaceId)
+									gristtools.DisplayWorkspaceAccess(worskspaceId)
 								}
 							}
 						default:
@@ -85,7 +94,7 @@ func main() {
 						}
 					}
 				case "users":
-					gristapi.DisplayUserMatrix()
+					gristtools.DisplayUserMatrix()
 				default:
 					gristtools.Help()
 				}
