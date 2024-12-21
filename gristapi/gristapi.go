@@ -628,3 +628,17 @@ func DisplayUserMatrix() {
 	}
 	w.Flush()
 }
+
+func ExportDocGrist(docId string) {
+	// Export doc in Grist format (Sqlite)
+	url := fmt.Sprintf("docs/%s/download", docId)
+	file := httpGet(url, "")
+	fmt.Println(file)
+}
+
+func ExportDocExcel(docId string) {
+	// Export doc in Excel format (XLSX)
+	url := fmt.Sprintf("docs/%s/download/xlsx", docId)
+	file := httpGet(url, "")
+	fmt.Println(file)
+}

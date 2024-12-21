@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
@@ -48,10 +49,18 @@ func main() {
 							docId := args[2]
 							gristapi.DisplayDoc(docId)
 						case 4:
-							if args[3] == "access" {
-								docId := args[2]
+							docId := args[2]
+							switch args[3] {
+							case "access":
 								gristapi.DisplayDocAccess(docId)
+							case "grist":
+								gristapi.ExportDocGrist(docId)
+							case "excel":
+								gristapi.ExportDocExcel(docId)
+							default:
+								fmt.Println("You have to choose between 'access', 'grist', or 'excel'")
 							}
+
 						default:
 							gristtools.Help()
 						}
