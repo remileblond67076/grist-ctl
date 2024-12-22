@@ -372,17 +372,33 @@ func DisplayUserMatrix() {
 	// Displaying the rights matrix
 
 	lstOrg := gristapi.GetOrgs()
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Id", "Name", "Access", "Wokspace id", "Workspace name"})
 	for _, org := range lstOrg {
-		common.DisplayTitle(fmt.Sprintf("Org %s (%d)", org.Name, org.Id))
+		table := tablewriter.NewWriter(os.Stdout)
+		table.SetHeader([]string{"Id", "Name", "Email", "Access", "ParentAccess", "Workspace name", "Wokspace id"})
+		common.DisplayTitle(fmt.Sprintf("Org \"%s\" (%d)", org.Name, org.Id))
 		for _, ws := range gristapi.GetOrgWorkspaces(org.Id) {
-			for _, user := range gristapi.GetWorkspaceAccess(ws.Id).Users {
-				if user.Access != "" {
-					table.Append([]string{strconv.Itoa(user.Id), user.Email, user.Access, ws.Name, strconv.Itoa(ws.Id)})
+			users := dataframe.LoadStructs(gristapi.GetWorkspaceAccess(ws.Id).Users).Arrange(dataframe.Sort("Email"))
+			for line := 0; line < users.Nrow(); line++ {
+				ok := false
+				row := make([]string, users.Ncol()+2)
+				for colId, colName := range users.Names() {
+					value := fmt.Sprintf("%v", users.Elem(line, colId))
+					row[colId] = value
+
+					// Only keep accessfull lines
+					if strings.Contains(colName, "Access") {
+						if value != "" {
+							ok = true
+						}
+					}
+				}
+				row[users.Ncol()] = ws.Name
+				row[users.Ncol()+1] = strconv.Itoa(ws.Id)
+				if ok {
+					table.Append(row)
 				}
 			}
 		}
+		table.Render()
 	}
-	table.Render()
 }
