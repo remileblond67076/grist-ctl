@@ -371,34 +371,58 @@ func DisplayDocAccess(docId string) {
 func DisplayUserMatrix() {
 	// Displaying the rights matrix
 
+	type userAccess struct {
+		Id            int
+		Email         string
+		Name          string
+		OrgId         int
+		OrgName       string
+		WorkspaceName string
+		WokspaceId    int
+		ParentAccess  string
+		DirectAccess  string
+		Access        string
+	}
+	lstUserAccess := []userAccess{}
+
 	lstOrg := gristapi.GetOrgs()
 	for _, org := range lstOrg {
-		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"Id", "Name", "Email", "Access", "ParentAccess", "Workspace name", "Wokspace id"})
-		common.DisplayTitle(fmt.Sprintf("Org \"%s\" (%d)", org.Name, org.Id))
 		for _, ws := range gristapi.GetOrgWorkspaces(org.Id) {
-			users := dataframe.LoadStructs(gristapi.GetWorkspaceAccess(ws.Id).Users).Arrange(dataframe.Sort("Email"))
-			for line := 0; line < users.Nrow(); line++ {
-				ok := false
-				row := make([]string, users.Ncol()+2)
-				for colId, colName := range users.Names() {
-					value := fmt.Sprintf("%v", users.Elem(line, colId))
-					row[colId] = value
-
-					// Only keep accessfull lines
-					if strings.Contains(colName, "Access") {
-						if value != "" {
-							ok = true
-						}
+			for _, access := range gristapi.GetWorkspaceAccess(ws.Id).Users {
+				tmpUserAccess := userAccess{
+					Id:            access.Id,
+					Email:         access.Email,
+					Name:          access.Name,
+					OrgId:         org.Id,
+					OrgName:       org.Name,
+					WorkspaceName: ws.Name,
+					WokspaceId:    ws.Id,
+					ParentAccess:  access.ParentAccess,
+					DirectAccess:  access.Access,
+				}
+				if access.Access != "" {
+					tmpUserAccess.Access = access.Access
+				} else {
+					if access.ParentAccess != "" {
+						tmpUserAccess.Access = access.Access
 					}
 				}
-				row[users.Ncol()] = ws.Name
-				row[users.Ncol()+1] = strconv.Itoa(ws.Id)
-				if ok {
-					table.Append(row)
+				if access.Access != "" {
+					lstUserAccess = append(lstUserAccess, tmpUserAccess)
 				}
 			}
 		}
-		table.Render()
 	}
+	accessDf := dataframe.LoadStructs(lstUserAccess)
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Id", "Email", "Name", "Org Id", "Org name", "Wokspace id", "Workspace name", "ParentAccess", "DirectAccess", "Access"})
+	for email, access := range accessDf.Arrange(dataframe.Sort("Email")).GroupBy("Email").GetGroups() {
+		for id, val := range access.Records() {
+			if id > 0 {
+				line := []string{val[3], email, val[4], val[5], val[6], val[8], val[9], val[7], val[1], val[0]}
+				table.Append(line)
+			}
+		}
+	}
+	table.Render()
 }
