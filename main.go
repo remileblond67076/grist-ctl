@@ -1,3 +1,4 @@
+// Main program
 package main
 
 import (
@@ -65,7 +66,7 @@ func main() {
 							switch args[3] {
 							case "table":
 								tableName := args[4]
-								gristtools.DisplayTableRecords(docId, tableName)
+								gristapi.GetTableContent(docId, tableName)
 							default:
 								gristtools.Help()
 							}

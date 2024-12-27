@@ -1,3 +1,4 @@
+// Common tools for Grist
 package gristtools
 
 import (
@@ -17,6 +18,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+// Display help message and quit
 func Help() {
 	common.DisplayTitle("GRIST : API querying")
 	fmt.Println(`Accepted orders :
@@ -27,16 +29,20 @@ func Help() {
 - get doc <id> access : list of document access rights
 - get doc <id> grist : export document as a Grist file (Sqlite) in stdout
 - get doc <id> excel : export document as an Excel file (xlsx) in stdout
-- purge doc <id> [<number of states to keep>]: purges document history (retains last 3 operations by default)
+- get doc <id> table <tableName> : export content of a document's table as a CSV file (xlsx) in stdout
 - get workspace <id>: workspace details
 - get workspace <id> access: list of workspace access rights
-- delete workspace <id> : delete a workspace
-- delete user <id> : delete a user
+- get users : displays all user rights
 - import users : imports users from standard input
-- get users : displays all user rights`)
+- purge doc <id> [<number of states to keep>]: purges document history (retains last 3 operations by default)
+- delete workspace <id> : delete a workspace
+- delete user <id> : delete a user`)
 	os.Exit(0)
 }
 
+// Configure Grist envfile (url and api token)
+//
+// Interactive filling the `.gristctl` file
 func Config() {
 	configFile := gristapi.GetConfig()
 	common.DisplayTitle(fmt.Sprintf("Setting the url and token for access to the grist server (%s)", configFile))
@@ -77,13 +83,16 @@ func Config() {
 			os.Exit(0)
 		}
 	default:
-		fmt.Println("On ne fait rien...")
+		fmt.Println("Keeping all il place...")
 	}
 }
 
-func displayRole(role string) {
-	// User role translation
+/*
+User role translation
 
+Returns the role explanation corresponding to its code
+*/
+func DisplayRole(role string) {
 	switch role {
 	case "":
 		fmt.Println("No inheritance of rights from upper level")
@@ -98,8 +107,18 @@ func displayRole(role string) {
 	}
 }
 
+/*
+Import users from a list sent to standard input (stdin)
+
+CSV input file has to be formatied with the following columns, separated with ';' :
+- mail
+- org id
+- Workspace name
+- role
+
+Missing workspaces will be created on import.
+*/
 func ImportUsers() {
-	// Import users from CSV file from stdin
 	common.DisplayTitle("Import users from stdin")
 	fmt.Println("Expected data format : <mail>;<org id>;<workspace name>;<role>")
 
@@ -146,7 +165,7 @@ func ImportUsers() {
 		workspaceId := line[1]
 		for i, user := range users.Select([]string{"Mail", "Role"}).Records() {
 			if i > 0 {
-				newRole := gristapi.UserRole{user[0], user[1]}
+				newRole := gristapi.UserRole{Email: user[0], Role: user[1]}
 				roles = append(roles, newRole)
 			}
 		}
@@ -154,8 +173,8 @@ func ImportUsers() {
 	}
 }
 
+// Displays the list of users witch access to an organization
 func DisplayOrgAccess(idOrg string) {
-	// Displays the list of users with access to an organization
 
 	lstUsers := gristapi.GetOrgAccess(idOrg)
 	table := tablewriter.NewWriter(os.Stdout)
@@ -233,16 +252,6 @@ func DisplayDoc(docId string) {
 	sort.Strings(details)
 	for _, ligne := range details {
 		fmt.Printf("%s", ligne)
-	}
-}
-
-func DisplayTableRecords(docId string, tableName string) {
-	fmt.Printf("Doc %s - table %s\n", docId, tableName)
-	df := gristapi.GetTableContent(docId, tableName)
-
-	if df.Err != nil {
-		fmt.Println("Error:", df.Err)
-		return
 	}
 }
 
@@ -327,7 +336,7 @@ func DisplayWorkspaceAccess(workspaceId int) {
 	ws := gristapi.GetWorkspace((workspaceId))
 	common.DisplayTitle(fmt.Sprintf("Workspace n°%d access rights : %s", ws.Id, ws.Name))
 	wsa := gristapi.GetWorkspaceAccess(workspaceId)
-	displayRole(wsa.MaxInheritedRole)
+	DisplayRole(wsa.MaxInheritedRole)
 
 	nbUsers := len(wsa.Users)
 	if nbUsers <= 0 {
@@ -356,7 +365,7 @@ func DisplayDocAccess(docId string) {
 	common.DisplayTitle(title)
 
 	docAccess := gristapi.GetDocAccess(docId)
-	displayRole(docAccess.MaxInheritedRole)
+	DisplayRole(docAccess.MaxInheritedRole)
 	fmt.Printf("\nDirect users:\n")
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Id", "Emai", "Nom", "Inherited access", "Direct access"})
