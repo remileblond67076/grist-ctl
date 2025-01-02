@@ -1,8 +1,8 @@
-# GRIST-ctl Command Line Interface (CLI) for Grist
+# GRISTcli Command Line Interface (CLI) for Grist
 
 **[Grist](https://www.getgrist.com/)** is a versatile platform for creating and managing custom data applications. It blends the capabilities of a relational database with the adaptability of a spreadsheet, empowering users to design advanced data workflows, collaborate in real-time, and automate tasks—all without requiring code.
 
-![GRIST logo](grist-logo.png)
+![GRIST logo](gristcli-logo.png)
 
 **gristctl** is a command-line utility designed for interacting with Grist. It allows users to automate and manage tasks related to Grist documents, including creating, updating, listing, deleting documents, and retrieving data from them.
 
@@ -23,33 +23,18 @@ List of commands :
 - `import users` : imports users from standard input
 - `get users` : displays all user rights
 
-### Configure grist connexion
-
-```bash
-$ gristctl config
-----------------------------------------------------------------------------------
-Setting the url and token for access to the grist server (/Users/me/.gristctl)
-----------------------------------------------------------------------------------
-Actual URL : https://wpgrist.cus.fr
-Token : ✅
-Would you like to configure (Y/N) ?
-y
-Grist server URL (https://......... without '/' in the end): https://grist.numerique.gouv.fr 
-User token : secrettoken
-Url : https://grist.numerique.gouv.fr --- Token: secrettoken
-Is it OK (Y/N) ? y
-Config saved in /Users/me/.gristctl
-```
-
 ### List Grist organization
 
 To list all available Grist organization:
 
 ```bash
 $ gristctl get org
-Id    Nom
-2     Personal
-3     ems
++----+----------+
+| ID |   NAME   |
++----+----------+
+|  2 | Personal |
+|  3 | ems      |
++----+----------+
 ```
 
 ### Displays information about an organization
@@ -61,11 +46,14 @@ $ gristctl get org 3
 ---------------------------------------
 Organization n°3 : ems (30 workspaces)
 ---------------------------------------
-Workspace Id    Workspace name                        Doc    Direct users
-658             Cellule dev et interopérabilité       1      3
-676             Cellule Stratégie Logiciels Libres    1      1
-351             Direction-CLT                         2      3
++--------------+--------------------------------+-----+--------------+
+| WORKSPACE ID |         WORKSPACE NAME         | DOC | DIRECT USERS |
++--------------+--------------------------------+-----+--------------+
+|          350 | Direction-DSI                  |   4 |          285 |
+|          341 | Service-INF                    |   2 |          284 |
+|          649 | Service-PSS                    |   4 |            3 |
 ...
++--------------+--------------------------------+-----+--------------+
 ```
 
 ### Describe a workspace
@@ -78,8 +66,11 @@ $ gristctl get workspace 676
 Organization n°3 : "ems", workspace n°676 : "Cellule Stratégie Logiciels Libres"
 -----------------------------------------------------------------------------------
 Contains 1 documents :
-Id                         Name           Pinned
-b8RzZzAJ4JgPWN1HKFTb48     Ressources     📌
++------------------------+------------+--------+
+|           ID           |    NAME    | PINNED |
++------------------------+------------+--------+
+| b8RzZzAJ4JgPWN1HKFTb48 | Ressources | 📌     |
++------------------------+------------+--------+
 ```
 
 ### View workspace access rights
@@ -92,9 +83,12 @@ Workspace n°676 access rights : Cellule Stratégie Logiciels Libres
 Full inheritance of rights from the next level up
 
 Accessible to the following users :
-Id      Nom               Email                           Inherited access     Direct access
-5       xxxxx xxxxxx      xxx.xxxxxxxx@strasbourg.eu      owners               
-237     xxxxxx xxxxxx     xxxxx.xxxxxxx@strasbourg.eu     owners               owners
++-----+---------------+-----------------------------+------------------+---------------+
+| ID  |      NOM      |            EMAIL            | INHERITED ACCESS | DIRECT ACCESS |
++-----+---------------+-----------------------------+------------------+---------------+
+|   5 | xxxx xxxxxxx  | xxxx.xxxxxxx@strasbourg.eu  | owners           |               |
+| 237 | xxxxxxx xxxxx | xxxxxxx.xxxxx@strasbourg.eu | owners           | owners        |
++-----+---------------+-----------------------------+------------------+---------------+
 2 users
 ```
 
@@ -127,16 +121,18 @@ cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;S
 
 To get started with `gristctl`, follow the steps below to install the tool on your machine.
 
-### Prerequisites
-
-- If you want to build from sources, ensure you have a [working installation of Go](https://golang.org/doc/install) (version 1.23 or later).
-- You should also have access to a Grist instance.
-
 ### Installing from exec files
 
 Download exec files from [release](https://github.com/Ville-Eurometropole-Strasbourg/gristctl/releases). Extract the archive and copy the `gristctl` file corresponding to your runtime environment into a directory in your PATH.
 
 ### Installing from Source
+
+#### Prerequisites
+
+- If you want to build from sources, ensure you have a [working installation of Go](https://golang.org/doc/install) (version 1.23 or later).
+- You should also have access to a Grist instance.
+
+#### Build
 
 To install `gristctl` from source:
 
@@ -171,7 +167,19 @@ To install `gristctl` from source:
 You can configure `gristctl` with the following command :
 
 ```bash
-gristctl config
+$ gristctl config
+----------------------------------------------------------------------------------
+Setting the url and token for access to the grist server (/Users/me/.gristctl)
+----------------------------------------------------------------------------------
+Actual URL : https://wpgrist.cus.fr
+Token : ✅
+Would you like to configure (Y/N) ?
+y
+Grist server URL (https://......... without '/' in the end): https://grist.numerique.gouv.fr 
+User token : secrettoken
+Url : https://grist.numerique.gouv.fr --- Token: secrettoken
+Is it OK (Y/N) ? y
+Config saved in /Users/me/.gristctl
 ```
 
 #### Manually
