@@ -40,9 +40,10 @@ func Help() {
 	os.Exit(0)
 }
 
-// Configure Grist envfile (url and api token)
-//
-// Interactive filling the `.gristctl` file
+/*
+Configure Grist envfile (url and api token)
+Interactive filling the `.gristctl` file
+*/
 func Config() {
 	configFile := gristapi.GetConfig()
 	common.DisplayTitle(fmt.Sprintf("Setting the url and token for access to the grist server (%s)", configFile))
@@ -92,19 +93,21 @@ User role translation
 
 Returns the role explanation corresponding to its code
 */
-func DisplayRole(role string) {
-	switch role {
+func TranslateRole(roleCode string) string {
+	var role string
+	switch roleCode {
 	case "":
-		fmt.Println("No inheritance of rights from upper level")
+		role = "No inheritance of rights from upper level"
 	case "owners":
-		fmt.Println("Full inheritance of rights from the next level up")
+		role = "Full inheritance of rights from the next level up"
 	case "editors":
-		fmt.Println("Inherit display and edit rights from higher level")
+		role = "Inherit display and edit rights from higher level"
 	case "viewers":
-		fmt.Println("Inheritance of consultation rights from higher level")
+		role = "Inheritance of consultation rights from higher level"
 	default:
-		fmt.Printf("Inheritance level : %s\n", role)
+		role = fmt.Sprintf("Inheritance level : %s\n", roleCode)
 	}
+	return role
 }
 
 /*
@@ -186,15 +189,17 @@ func DisplayOrgAccess(idOrg string) {
 	table.Render()
 }
 
-func DisplayDoc(docId string) {
-	// Displays detailed information about a document
-	// - Document name
-	// - Number of tables
-	// For each table :
-	// - Number of columns
-	// - Number of rows
-	// - List of columns
+/*
+	Displays detailed information about a document
 
+- Document name
+- Number of tables
+- For each table :
+  - Number of columns
+  - Number of rows
+  - List of columns
+*/
+func DisplayDoc(docId string) {
 	doc := gristapi.GetDoc(docId)
 
 	type TableDetails struct {
@@ -255,8 +260,8 @@ func DisplayDoc(docId string) {
 	}
 }
 
+// Displays the list of accessible organizations
 func DisplayOrgs() {
-	// Displays the list of accessible organizations
 
 	lstOrgs := gristapi.GetOrgs()
 	table := tablewriter.NewWriter(os.Stdout)
@@ -267,8 +272,8 @@ func DisplayOrgs() {
 	table.Render()
 }
 
+// Displays details about an organization
 func DisplayOrg(orgId string) {
-	// Displays details about an organization
 
 	type wpDesc struct {
 		id     int
@@ -307,8 +312,8 @@ func DisplayOrg(orgId string) {
 	table.Render()
 }
 
+// Affiche des détails d'un Workspace
 func DisplayWorkspace(workspaceId int) {
-	// Affiche des détails d'un Workspace
 
 	ws := gristapi.GetWorkspace(workspaceId)
 	common.DisplayTitle(fmt.Sprintf("Organization n°%d : \"%s\", workspace n°%d : \"%s\"", ws.Org.Id, ws.Org.Name, ws.Id, ws.Name))
@@ -330,13 +335,13 @@ func DisplayWorkspace(workspaceId int) {
 	}
 }
 
+// Displays workspace access rights
 func DisplayWorkspaceAccess(workspaceId int) {
-	// Displays workspace access rights
 
 	ws := gristapi.GetWorkspace((workspaceId))
 	common.DisplayTitle(fmt.Sprintf("Workspace n°%d access rights : %s", ws.Id, ws.Name))
 	wsa := gristapi.GetWorkspaceAccess(workspaceId)
-	DisplayRole(wsa.MaxInheritedRole)
+	fmt.Println(TranslateRole(wsa.MaxInheritedRole))
 
 	nbUsers := len(wsa.Users)
 	if nbUsers <= 0 {
@@ -357,15 +362,14 @@ func DisplayWorkspaceAccess(workspaceId int) {
 	}
 }
 
+// Displays users with access to a document
 func DisplayDocAccess(docId string) {
-	// Displays users with access to a document
-
 	doc := gristapi.GetDoc(docId)
 	title := fmt.Sprintf("Workspace \"%s\" (n°%d), document \"%s\"", doc.Workspace.Name, doc.Workspace.Id, doc.Name)
 	common.DisplayTitle(title)
 
 	docAccess := gristapi.GetDocAccess(docId)
-	DisplayRole(docAccess.MaxInheritedRole)
+	fmt.Println(TranslateRole(docAccess.MaxInheritedRole))
 	fmt.Printf("\nDirect users:\n")
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Id", "Emai", "Nom", "Inherited access", "Direct access"})
@@ -377,9 +381,8 @@ func DisplayDocAccess(docId string) {
 	table.Render()
 }
 
+// Displaying the rights matrix
 func DisplayUserMatrix() {
-	// Displaying the rights matrix
-
 	type userAccess struct {
 		Id            int
 		Email         string

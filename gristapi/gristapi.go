@@ -33,7 +33,7 @@ type Org struct {
 	CreatedAt string `json:"createdAt"`
 }
 
-// Grist'a workspace
+// Grist's workspace
 type Workspace struct {
 	Id                 int    `json:"id"`
 	Name               string `json:"name"`

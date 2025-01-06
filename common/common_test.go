@@ -5,12 +5,12 @@ import (
 )
 
 func TestTitle(t *testing.T) {
-	txt := "Ceci est mon texte"
+	txt := "This is my title"
 	title := Title(txt)
 
-	lenTitle := len(title)
+	titleLength := len(title)
 	lenTxt := len(txt)
-	if lenTitle != (3*lenTxt + 2) {
-		t.Errorf("La longueur du titre n'est pas correcte (%d/%d)", lenTitle, lenTxt)
+	if titleLength != (3*lenTxt + 2) {
+		t.Errorf("Title's length is not correct (%d/%d)", titleLength, lenTxt)
 	}
 }
