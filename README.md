@@ -6,6 +6,117 @@
 
 **gristctl** is a command-line utility designed for interacting with Grist. It allows users to automate and manage tasks related to Grist documents, including creating, updating, listing, deleting documents, and retrieving data from them.
 
+<div align="center">
+    
+[Installation](#installation) • 
+[Configuration](#configuration) • 
+[Usage](#usage)
+
+</div>
+
+## Installation
+
+To get started with `gristctl`, follow the steps below to install the tool on your machine.
+
+### Installing from exec files
+
+Download exec files from [release](https://github.com/Ville-Eurometropole-Strasbourg/gristctl/releases). Extract the archive and copy the `gristctl` file corresponding to your runtime environment into a directory in your PATH.
+
+<details>
+   <summary>Windows</summary>
+   
+   > That means you can either:
+   > - copy the `gristctl.exe` into a directory that is in your PATH
+   > - add the directory that contains `gristctl.exe` in your PATH environment variable
+
+</details>
+
+### Installing from Source
+
+#### Prerequisites
+
+- If you want to build from sources, ensure you have a [working installation of Go](https://golang.org/doc/install) (version 1.23 or later).
+- You should also have access to a Grist instance.
+
+#### Build
+
+To install `gristctl` from source:
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/Ville-Eurometropole-Strasbourg/gristctl.git
+   ```
+
+2. Open a terminal (or command prompt on Windows) and navigate to the `gristctl` directory:
+
+   ```bash
+   cd gristctl
+   ```
+
+3. Build the tool:
+
+   ```bash
+   go build
+   ```
+
+    - Note: If dependencies don't install automatically you may need to install them manually (ex: `go get gristctl/gristapi`) then build again.
+
+4. Once the build is completed, you can move the binary (`gristctl.exe`) to your `PATH`.
+
+<details>
+   <summary>Windows</summary>
+   
+   > That means you can either:
+   > - copy the `gristctl.exe` into a directory that is in your PATH
+   > - add the directory that contains `gristctl.exe` in your PATH environment variable
+
+</details>
+
+<details>
+   <summary>Linux/macOS</summary>
+    
+   > Exemple:
+   > ```bash
+   > sudo mv gristctl /usr/local/bin/
+   > ```
+>    
+</details>
+
+## Configuration
+
+You will need your Grist instance URL and your Grist user token/API key (to find it you can follow the [official documentation](https://support.getgrist.com/rest-api/)).
+
+### Interactively
+
+You can configure `gristctl` with the following command :
+
+```bash
+$ gristctl config
+----------------------------------------------------------------------------------
+Setting the url and token for access to the grist server (/Users/me/.gristctl)
+----------------------------------------------------------------------------------
+Actual URL : https://wpgrist.cus.fr
+Token : ✅
+Would you like to configure (Y/N) ?
+y
+Grist server URL (https://......... without '/' in the end): https://grist.numerique.gouv.fr
+User token : secrettoken
+Url : https://grist.numerique.gouv.fr --- Token: secrettoken
+Is it OK (Y/N) ? y
+Config saved in /Users/me/.gristctl
+```
+
+### Manually
+
+Create a `.gristctl` file in your home directory containing the following information:
+
+```ini
+GRIST_TOKEN="user session token"
+GRIST_URL="https://<GRIST server URL, without /api>"
+```
+
+
 ## Usage
 
 List of commands :
@@ -115,80 +226,6 @@ cat ga_grist_pu.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;D
 cat ga_grist_pu.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Service-"$3";viewers"}' | ./gristctl import users
 cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Direction-"$2";editors"}' | ./gristctl import users
 cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Service-"$3";editors"}' | ./gristctl import users
-```
-
-## Installation
-
-To get started with `gristctl`, follow the steps below to install the tool on your machine.
-
-### Installing from exec files
-
-Download exec files from [release](https://github.com/Ville-Eurometropole-Strasbourg/gristctl/releases). Extract the archive and copy the `gristctl` file corresponding to your runtime environment into a directory in your PATH.
-
-### Installing from Source
-
-#### Prerequisites
-
-- If you want to build from sources, ensure you have a [working installation of Go](https://golang.org/doc/install) (version 1.23 or later).
-- You should also have access to a Grist instance.
-
-#### Build
-
-To install `gristctl` from source:
-
-1. Clone the repository:
-
-    ```bash
-    git clone https://github.com/Ville-Eurometropole-Strasbourg/gristctl.git
-    ```
-
-2. Navigate to the `gristctl` directory:
-
-    ```bash
-    cd gristctl
-    ```
-
-3. Build the tool:
-
-    ```bash
-    go build
-    ```
-
-4. Once the build completes, you can move the binary (`gristctl`) to a directory included in your `PATH`, for example:
-
-    ```bash
-    sudo mv gristctl /usr/local/bin/
-    ```
-
-### Configuring
-
-#### Interactively
-
-You can configure `gristctl` with the following command :
-
-```bash
-$ gristctl config
-----------------------------------------------------------------------------------
-Setting the url and token for access to the grist server (/Users/me/.gristctl)
-----------------------------------------------------------------------------------
-Actual URL : https://wpgrist.cus.fr
-Token : ✅
-Would you like to configure (Y/N) ?
-y
-Grist server URL (https://......... without '/' in the end): https://grist.numerique.gouv.fr 
-User token : secrettoken
-Url : https://grist.numerique.gouv.fr --- Token: secrettoken
-Is it OK (Y/N) ? y
-Config saved in /Users/me/.gristctl
-```
-
-#### Manually
-
-Create a `.gristctl` file in your home directory containing the following information:
-
-```ini
-GRIST_TOKEN="user session token"
-GRIST_URL="https://<GRIST server URL, without /api>"
 ```
 
 ## Contributing
