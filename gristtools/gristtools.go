@@ -35,8 +35,9 @@ func Help() {
 - get users : displays all user rights
 - import users : imports users from standard input
 - purge doc <id> [<number of states to keep>]: purges document history (retains last 3 operations by default)
-- delete workspace <id> : delete a workspace
-- delete user <id> : delete a user`)
+- delete doc <id> : delete a document
+- delete user <id> : delete a user
+- delete workspace <id> : delete a workspace`)
 	os.Exit(0)
 }
 
