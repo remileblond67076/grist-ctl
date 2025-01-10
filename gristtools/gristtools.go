@@ -29,13 +29,13 @@ func Help() {
 - config : configure url & token of Grist server
 - get org : organization list
 - get org <id> : organization details
+- get workspace <id>: workspace details
+- get workspace <id> access: list of workspace access rights
 - get doc <id> : document details
 - get doc <id> access : list of document access rights
 - get doc <id> grist : export document as a Grist file (Sqlite) in stdout
 - get doc <id> excel : export document as an Excel file (xlsx) in stdout
 - get doc <id> table <tableName> : export content of a document's table as a CSV file (xlsx) in stdout
-- get workspace <id>: workspace details
-- get workspace <id> access: list of workspace access rights
 - get users : displays all user rights
 - import users : imports users from standard input
 - purge doc <id> [<number of states to keep>]: purges document history (retains last 3 operations by default)
@@ -63,10 +63,10 @@ func Config() {
 
 	switch response := strings.ToLower(goConfig); response {
 	case "y":
-		fmt.Print("Grist server URL (https://......... without '/' in the end): ")
+		fmt.Print("Grist server URL (that starts with https:// and without '/' in the end): ")
 		var url string
 		fmt.Scanln(&url)
-		fmt.Print("User token : ")
+		fmt.Print("User token (API key) : ")
 		var token string
 		fmt.Scanln(&token)
 		fmt.Printf("Url : %s --- Token: %s\nIs it OK (Y/N) ? ", url, token)
@@ -252,7 +252,7 @@ func DisplayDoc(docId string) {
 	wg.Wait()
 	var details []string
 	for _, table_details := range tables_details {
-		ligne := fmt.Sprintf("- %s : %d lines, %d colomns\n", title(table_details.name), table_details.nb_rows, table_details.nb_cols)
+		ligne := fmt.Sprintf("- %s : %d lines, %d columns\n", title(table_details.name), table_details.nb_rows, table_details.nb_cols)
 		for _, col_name := range table_details.cols_names {
 			ligne = ligne + fmt.Sprintf("  - %s\n", col_name)
 		}
@@ -376,7 +376,7 @@ func DisplayDocAccess(docId string) {
 	fmt.Println(TranslateRole(docAccess.MaxInheritedRole))
 	fmt.Printf("\nDirect users:\n")
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Id", "Emai", "Nom", "Inherited access", "Direct access"})
+	table.SetHeader([]string{"Id", "Email", "Nom", "Inherited access", "Direct access"})
 	for _, user := range docAccess.Users {
 		if user.Access != "" {
 			table.Append([]string{strconv.Itoa(user.Id), user.Email, user.Name, user.ParentAccess, user.Access})
