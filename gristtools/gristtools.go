@@ -41,8 +41,14 @@ func Help() {
 - purge doc <id> [<number of states to keep>]: purges document history (retains last 3 operations by default)
 - delete doc <id> : delete a document
 - delete user <id> : delete a user
-- delete workspace <id> : delete a workspace`)
+- delete workspace <id> : delete a workspace
+- version : displays the version of the program`)
 	os.Exit(0)
+}
+
+// Displays the version of the program
+func Version(version string) {
+	fmt.Println("Version : ", version)
 }
 
 /*

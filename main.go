@@ -14,6 +14,8 @@ import (
 	"gristctl/gristtools"
 )
 
+var version = "Undefined"
+
 func main() {
 	args := os.Args[1:]
 	if len(args) < 1 {
@@ -23,6 +25,8 @@ func main() {
 	switch arg1 := args[0]; arg1 {
 	case "config":
 		gristtools.Config()
+	case "version":
+		gristtools.Version(version)
 	case "get":
 		{
 			if len(args) > 1 {
