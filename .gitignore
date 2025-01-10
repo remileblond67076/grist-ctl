@@ -1,5 +1,12 @@
+# SPDX-FileCopyrightText: 2024 Ville Eurométropole Strasbourg
+#
+# SPDX-License-Identifier: MIT
+
 main
 go.sum
 .env
 gristctl
+gristctl.exe
 .DS_Store
+.gitlab-ci.yml
+grist-logo.png

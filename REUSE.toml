@@ -1,0 +1,7 @@
+version = 1
+
+# A simple glob of all .png files
+[[annotations]]
+path = "*.png"
+SPDX-FileCopyrightText = "2025 Ville Eurométropole Strasbourg"
+SPDX-License-Identifier = "CC-BY-4.0"

@@ -1,6 +1,13 @@
+<!--
+SPDX-FileCopyrightText: 2024 Ville Eurométropole Strasbourg
+
+SPDX-License-Identifier: MIT
+-->
+
 # GRISTcli Command Line Interface (CLI) for Grist
 
 [![img](https://img.shields.io/badge/code.gouv.fr-contributif-blue.svg)](https://code.gouv.fr/documentation/#quels-degres-douverture-pour-les-codes-sources)
+[![REUSE status](https://api.reuse.software/badge/git.fsfe.org/reuse/api)](https://api.reuse.software/info/git.fsfe.org/reuse/api)
 
 **[Grist](https://www.getgrist.com/)** is a versatile platform for creating and managing custom data applications. It blends the capabilities of a relational database with the adaptability of a spreadsheet, empowering users to design advanced data workflows, collaborate in real-time, and automate tasks—all without requiring code.
 

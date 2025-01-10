@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2024 Ville Eurométropole Strasbourg
+//
+// SPDX-License-Identifier: MIT
+
 // Common tools for Grist
 package gristtools
 
@@ -84,7 +88,7 @@ func Config() {
 			os.Exit(0)
 		}
 	default:
-		fmt.Println("Keeping all il place...")
+		fmt.Println("Keeping all in place...")
 	}
 }
 

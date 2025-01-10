@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2024 Ville Eurométropole Strasbourg
+//
+// SPDX-License-Identifier: MIT
+
 package common
 
 import (
