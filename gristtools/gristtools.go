@@ -11,6 +11,7 @@ import (
 	"gristctl/common"
 	"gristctl/gristapi"
 	"os"
+	"regexp"
 	"slices"
 	"sort"
 	"strconv"
@@ -70,9 +71,16 @@ func Config() {
 
 	switch response := strings.ToLower(goConfig); response {
 	case "y":
-		fmt.Print("Grist server URL (that starts with https:// and without '/' in the end): ")
 		var url string
-		fmt.Scanln(&url)
+		urlSet := false
+		for urlSet == false {
+			fmt.Print("Grist server URL (that starts with https:// and without '/' in the end): ")
+			fmt.Scanln(&url)
+
+			// Test if url is well formatted
+			urlOk, _ := regexp.MatchString(`^https?://.*[^/]$`, url)
+			urlSet = urlOk
+		}
 		fmt.Print("User token (API key) : ")
 		var token string
 		fmt.Scanln(&token)
@@ -89,8 +97,16 @@ func Config() {
 			defer f.Close()
 			config := fmt.Sprintf("GRIST_URL=\"%s\"\nGRIST_TOKEN=\"%s\"\n", url, token)
 			f.WriteString(config)
-
+			f.Close()
 			fmt.Printf("Config saved in %s\n", configFile)
+
+			// Test the configuration by connecting to the server
+			nbOrgs := len(gristapi.GetOrgs())
+			if nbOrgs <= 0 {
+				fmt.Println("Error on connecting to the server. The config looks wrong.")
+				os.Exit(-1)
+			}
+
 		default:
 			os.Exit(0)
 		}
