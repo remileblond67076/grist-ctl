@@ -138,6 +138,7 @@ List of commands :
 - `purge doc <id> [<number of states to keep>]`: purges document history (retains last 3 operations by default)
 - `get workspace <id>`: workspace details
 - `get workspace <id> access`: list of workspace access rights
+- `delete doc <id>`: delete a document
 - `delete workspace <id>` : delete a workspace
 - `delete user <id>` : delete a user
 - `import users` : imports users from standard input
