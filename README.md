@@ -135,6 +135,9 @@ List of commands :
 - `get org <id>` : organization details
 - `get doc <id>` : document details
 - `get doc <id> access` : list of document access rights
+- `get doc <id> grist` : export document as a Grist file (Sqlite) in stdout
+- `get doc <id> excel` : export document as an Excel file (xlsx) in stdout
+- `get doc <id> table <tableName>` : export content of a document's table as a CSV file (xlsx) in stdout
 - `purge doc <id> [<number of states to keep>]`: purges document history (retains last 3 operations by default)
 - `get workspace <id>`: workspace details
 - `get workspace <id> access`: list of workspace access rights
