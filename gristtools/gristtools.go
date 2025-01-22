@@ -319,7 +319,12 @@ func DisplayDoc(docId string) {
 // Displays the list of accessible organizations
 func DisplayOrgs() {
 
+	// Getting the list of organizations
 	lstOrgs := gristapi.GetOrgs()
+	// Sorting the list of organizations by name (lowercase)
+	sort.Slice(lstOrgs, func(i, j int) bool {
+		return strings.ToLower(lstOrgs[i].Name) < strings.ToLower(lstOrgs[j].Name)
+	})
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Id", "Name"})
 	for _, org := range lstOrgs {
