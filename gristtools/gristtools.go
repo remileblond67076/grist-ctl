@@ -354,9 +354,16 @@ func DisplayOrg(orgId string) {
 // Affiche des détails d'un Workspace
 func DisplayWorkspace(workspaceId int) {
 
+	// Getting the workspace
 	ws := gristapi.GetWorkspace(workspaceId)
 	common.DisplayTitle(fmt.Sprintf("Organization n°%d : \"%s\", workspace n°%d : \"%s\"", ws.Org.Id, ws.Org.Name, ws.Id, ws.Name))
 
+	// Sort the documents by name (lowercase)
+	sort.Slice(ws.Docs, func(i, j int) bool {
+		return strings.ToLower(ws.Docs[i].Name) < strings.ToLower(ws.Docs[j].Name)
+	})
+
+	// Listing the documents
 	if len(ws.Docs) > 0 {
 		fmt.Printf("Contains %d documents :\n", len(ws.Docs))
 		table := tablewriter.NewWriter(os.Stdout)
