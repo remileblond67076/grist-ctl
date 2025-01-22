@@ -241,6 +241,7 @@ func DisplayOrgAccess(idOrg string) {
   - List of columns
 */
 func DisplayDoc(docId string) {
+	// Getting the document
 	doc := gristapi.GetDoc(docId)
 
 	type TableDetails struct {
@@ -250,15 +251,19 @@ func DisplayDoc(docId string) {
 		cols_names []string
 	}
 
-	title := color.New(color.FgRed).SprintFunc()
+	// Displaying the document name
+	titleColor := color.New(color.FgRed).SprintFunc()
 	pinned := ""
 	if doc.IsPinned {
 		pinned = "📌"
 	}
-	common.DisplayTitle(fmt.Sprintf("Document %s (%s) %s", title(doc.Name), doc.Id, pinned))
+	common.DisplayTitle(fmt.Sprintf("Document %s (%s) %s", titleColor(doc.Name), doc.Id, pinned))
 
+	// Getting the doc's tables
 	var tables gristapi.Tables = gristapi.GetDocTables(docId)
-	fmt.Printf("Contains %d tables\n", len(tables.Tables))
+	fmt.Printf("Contains %d tables :\n", len(tables.Tables))
+
+	// Getting the tables details
 	var wg sync.WaitGroup
 	var tables_details []TableDetails
 	for _, table := range tables.Tables {
@@ -287,18 +292,20 @@ func DisplayDoc(docId string) {
 		}()
 	}
 	wg.Wait()
-	var details []string
+
+	// Displaying the tables details
+	tableView := tablewriter.NewWriter(os.Stdout)
+	tableView.SetHeader([]string{"Table", "Nb columns", "Columns", "Rows"})
 	for _, table_details := range tables_details {
-		ligne := fmt.Sprintf("- %s : %d lines, %d columns\n", title(table_details.name), table_details.nb_rows, table_details.nb_cols)
-		for _, col_name := range table_details.cols_names {
-			ligne = ligne + fmt.Sprintf("  - %s\n", col_name)
+		for i, col_name := range table_details.cols_names {
+			if i == 0 {
+				tableView.Append([]string{table_details.name, strconv.Itoa(table_details.nb_cols), col_name, strconv.Itoa(table_details.nb_rows)})
+			} else {
+				tableView.Append([]string{"", "", col_name, ""})
+			}
 		}
-		details = append(details, ligne)
 	}
-	sort.Strings(details)
-	for _, ligne := range details {
-		fmt.Printf("%s", ligne)
-	}
+	tableView.Render()
 }
 
 // Displays the list of accessible organizations
