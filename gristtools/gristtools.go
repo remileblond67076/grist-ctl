@@ -26,24 +26,40 @@ import (
 // Display help message and quit
 func Help() {
 	common.DisplayTitle("GRIST : API querying")
-	fmt.Println(`Accepted orders :
-- config : configure url & token of Grist server
-- get org : organization list
-- get org <id> : organization details
-- get workspace <id>: workspace details
-- get workspace <id> access: list of workspace access rights
-- get doc <id> : document details
-- get doc <id> access : list of document access rights
-- get doc <id> grist : export document as a Grist file (Sqlite) in stdout
-- get doc <id> excel : export document as an Excel file (xlsx) in stdout
-- get doc <id> table <tableName> : export content of a document's table as a CSV file (xlsx) in stdout
-- get users : displays all user rights
-- import users : imports users from standard input
-- purge doc <id> [<number of states to keep>]: purges document history (retains last 3 operations by default)
-- delete doc <id> : delete a document
-- delete user <id> : delete a user
-- delete workspace <id> : delete a workspace
-- version : displays the version of the program`)
+	type command struct {
+		cmd  string
+		help string
+	}
+
+	cmdColor := color.New(color.FgRed).SprintFunc()
+	commands := []command{
+		{"config", "configure url & token of Grist server"},
+		{"get org", "organization list"},
+		{"get org <id>", "organization details"},
+		{"get workspace <id>", "workspace details"},
+		{"get workspace <id> access", "list of workspace access rights"},
+		{"get doc <id>", "document details"},
+		{"get doc <id> access", "list of document access rights"},
+		{"get doc <id> grist", "export document as a Grist file (Sqlite) in stdout"},
+		{"get doc <id> excel", "export document as an Excel file (xlsx) in stdout"},
+		{"get doc <id> table <tableName>", "export content of a document's table as a CSV file (xlsx) in stdout"},
+		{"get users", "displays all user rights"},
+		{"import users", "imports users from standard input"},
+		{"purge doc <id> [<number of states to keep>]", "purges document history (retains last 3 operations by default)"},
+		{"delete doc <id>", "delete a document"},
+		{"delete user <id>", "delete a user"},
+		{"delete workspace <id>", "delete a workspace"},
+		{"version", "displays the version of the program"},
+	}
+	// Sort commands by name
+	sort.Slice(commands, func(i, j int) bool {
+		return commands[i].cmd < commands[j].cmd
+	})
+
+	fmt.Println("Accepted orders :")
+	for _, command := range commands {
+		fmt.Printf("- %s : %s\n", cmdColor(command.cmd), command.help)
+	}
 	os.Exit(0)
 }
 
@@ -60,11 +76,17 @@ func Config() {
 	configFile := gristapi.GetConfig()
 	common.DisplayTitle(fmt.Sprintf("Setting the url and token for access to the grist server (%s)", configFile))
 	fmt.Printf("Actual URL : %s\n", os.Getenv("GRIST_URL"))
-	token := "✅"
-	if os.Getenv("GRIST_TOKEN") == "" {
-		token = "❌"
+	token := ""
+	for i := 0; i < len(os.Getenv("GRIST_TOKEN")); i++ {
+		token += "•"
 	}
 	fmt.Printf("Token : %s\n", token)
+	testConnect := "❌"
+	if gristapi.TestConnection() {
+		testConnect = "✅"
+	}
+	fmt.Printf("Connection : %s\n", testConnect)
+
 	fmt.Println("Would you like to configure (Y/N) ?")
 	var goConfig string
 	fmt.Scanln(&goConfig)
@@ -227,6 +249,7 @@ func DisplayOrgAccess(idOrg string) {
   - List of columns
 */
 func DisplayDoc(docId string) {
+	// Getting the document
 	doc := gristapi.GetDoc(docId)
 
 	type TableDetails struct {
@@ -236,15 +259,19 @@ func DisplayDoc(docId string) {
 		cols_names []string
 	}
 
-	title := color.New(color.FgRed).SprintFunc()
+	// Displaying the document name
+	titleColor := color.New(color.FgRed).SprintFunc()
 	pinned := ""
 	if doc.IsPinned {
 		pinned = "📌"
 	}
-	common.DisplayTitle(fmt.Sprintf("Document %s (%s) %s", title(doc.Name), doc.Id, pinned))
+	common.DisplayTitle(fmt.Sprintf("Document %s (%s) %s", titleColor(doc.Name), doc.Id, pinned))
 
+	// Getting the doc's tables
 	var tables gristapi.Tables = gristapi.GetDocTables(docId)
-	fmt.Printf("Contains %d tables\n", len(tables.Tables))
+	fmt.Printf("Contains %d tables :\n", len(tables.Tables))
+
+	// Getting the tables details
 	var wg sync.WaitGroup
 	var tables_details []TableDetails
 	for _, table := range tables.Tables {
@@ -273,24 +300,31 @@ func DisplayDoc(docId string) {
 		}()
 	}
 	wg.Wait()
-	var details []string
+
+	// Displaying the tables details
+	tableView := tablewriter.NewWriter(os.Stdout)
+	tableView.SetHeader([]string{"Table", "Nb columns", "Columns", "Rows"})
 	for _, table_details := range tables_details {
-		ligne := fmt.Sprintf("- %s : %d lines, %d columns\n", title(table_details.name), table_details.nb_rows, table_details.nb_cols)
-		for _, col_name := range table_details.cols_names {
-			ligne = ligne + fmt.Sprintf("  - %s\n", col_name)
+		for i, col_name := range table_details.cols_names {
+			if i == 0 {
+				tableView.Append([]string{table_details.name, strconv.Itoa(table_details.nb_cols), col_name, strconv.Itoa(table_details.nb_rows)})
+			} else {
+				tableView.Append([]string{"", "", col_name, ""})
+			}
 		}
-		details = append(details, ligne)
 	}
-	sort.Strings(details)
-	for _, ligne := range details {
-		fmt.Printf("%s", ligne)
-	}
+	tableView.Render()
 }
 
 // Displays the list of accessible organizations
 func DisplayOrgs() {
 
+	// Getting the list of organizations
 	lstOrgs := gristapi.GetOrgs()
+	// Sorting the list of organizations by name (lowercase)
+	sort.Slice(lstOrgs, func(i, j int) bool {
+		return strings.ToLower(lstOrgs[i].Name) < strings.ToLower(lstOrgs[j].Name)
+	})
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Id", "Name"})
 	for _, org := range lstOrgs {
@@ -317,6 +351,7 @@ func DisplayOrg(orgId string) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Workspace Id", "Workspace name", "Doc", "Direct users"})
 	var wg sync.WaitGroup
+	// Retrieving the number of documents and users for each workspace
 	for _, ws := range worskspaces {
 		func() {
 			defer wg.Done()
@@ -332,7 +367,12 @@ func DisplayOrg(orgId string) {
 		}()
 	}
 	wg.Wait()
+	// Sorting the list of workspaces by name
+	sort.Slice(lstWsDesc, func(i, j int) bool {
+		return lstWsDesc[i].name < lstWsDesc[j].name
+	})
 
+	// Displaying the list of workspaces
 	for _, desc := range lstWsDesc {
 		table.Append([]string{strconv.Itoa(desc.id), desc.name, strconv.Itoa(desc.nbDoc), strconv.Itoa(desc.nbUser)})
 	}
@@ -342,9 +382,16 @@ func DisplayOrg(orgId string) {
 // Affiche des détails d'un Workspace
 func DisplayWorkspace(workspaceId int) {
 
+	// Getting the workspace
 	ws := gristapi.GetWorkspace(workspaceId)
 	common.DisplayTitle(fmt.Sprintf("Organization n°%d : \"%s\", workspace n°%d : \"%s\"", ws.Org.Id, ws.Org.Name, ws.Id, ws.Name))
 
+	// Sort the documents by name (lowercase)
+	sort.Slice(ws.Docs, func(i, j int) bool {
+		return strings.ToLower(ws.Docs[i].Name) < strings.ToLower(ws.Docs[j].Name)
+	})
+
+	// Listing the documents
 	if len(ws.Docs) > 0 {
 		fmt.Printf("Contains %d documents :\n", len(ws.Docs))
 		table := tablewriter.NewWriter(os.Stdout)
@@ -364,12 +411,21 @@ func DisplayWorkspace(workspaceId int) {
 
 // Displays workspace access rights
 func DisplayWorkspaceAccess(workspaceId int) {
-
+	// Getting the workspace
 	ws := gristapi.GetWorkspace((workspaceId))
-	common.DisplayTitle(fmt.Sprintf("Workspace n°%d access rights : %s", ws.Id, ws.Name))
+	// Displaying the workspace name
+	common.DisplayTitle(fmt.Sprintf("Workspace n°%d : %s", ws.Id, ws.Name))
+
+	// Displaying the access rights
 	wsa := gristapi.GetWorkspaceAccess(workspaceId)
+
+	// Displaying the MaxInheritedRole
 	fmt.Println(TranslateRole(wsa.MaxInheritedRole))
 
+	// Sort users by email (lowercase)
+	sort.Slice(wsa.Users, func(i, j int) bool {
+		return strings.ToLower(wsa.Users[i].Email) < strings.ToLower(wsa.Users[j].Email)
+	})
 	nbUsers := len(wsa.Users)
 	if nbUsers <= 0 {
 		fmt.Println("Accessible to no user")
@@ -391,11 +447,20 @@ func DisplayWorkspaceAccess(workspaceId int) {
 
 // Displays users with access to a document
 func DisplayDocAccess(docId string) {
+	// Getting the document
 	doc := gristapi.GetDoc(docId)
+
+	// Displaying the document name
 	title := fmt.Sprintf("Workspace \"%s\" (n°%d), document \"%s\"", doc.Workspace.Name, doc.Workspace.Id, doc.Name)
 	common.DisplayTitle(title)
 
+	// Displaying the access rights
 	docAccess := gristapi.GetDocAccess(docId)
+	// Sorting users by email (lowercase)
+	sort.Slice(docAccess.Users, func(i, j int) bool {
+		return strings.ToLower(docAccess.Users[i].Email) < strings.ToLower(docAccess.Users[j].Email)
+	})
+
 	fmt.Println(TranslateRole(docAccess.MaxInheritedRole))
 	fmt.Printf("\nDirect users:\n")
 	table := tablewriter.NewWriter(os.Stdout)

@@ -128,27 +128,34 @@ func httpRequest(action string, myRequest string, data *bytes.Buffer) (string, i
 	// Send the HTTP request
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatalf("Error sending request %s: %s", url, err)
+		errMsg := fmt.Sprintf("Error sending request %s: %s", url, err)
+		return errMsg, -10
+	} else {
+		defer resp.Body.Close()
+		// Read the HTTP response body
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Printf("Error reading response %s: %s", url, err)
+		}
+		return string(body), resp.StatusCode
 	}
-	defer resp.Body.Close()
-
-	// Read the HTTP response body
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalf("Error reading response %s: %s", url, err)
-	}
-	return string(body), resp.StatusCode
 }
 
 // Send an HTTP GET request to Grist's REST API
 // Returns the response body
-func httpGet(myRequest string, data string) string {
+func httpGet(myRequest string, data string) (string, int) {
 	dataBody := bytes.NewBuffer([]byte(data))
 	body, status := httpRequest("GET", myRequest, dataBody)
 	if status != http.StatusOK {
 		fmt.Printf("Return code from %s : %d (%s)\n", myRequest, status, body)
 	}
-	return body
+	return body, status
+}
+
+// Test Grist API connection
+func TestConnection() bool {
+	_, status := httpGet("orgs", "")
+	return status == http.StatusOK
 }
 
 // Sends an HTTP POST request to Grist's REST API with a data load
@@ -178,7 +185,7 @@ func httpDelete(myRequest string, data string) (string, int) {
 // Retrieves the list of organizations
 func GetOrgs() []Org {
 	myOrgs := []Org{}
-	response := httpGet("orgs", "")
+	response, _ := httpGet("orgs", "")
 	json.Unmarshal([]byte(response), &myOrgs)
 	return myOrgs
 }
@@ -186,7 +193,7 @@ func GetOrgs() []Org {
 // Retrieves the organization whose identifier is passed in parameter
 func GetOrg(idOrg string) Org {
 	myOrg := Org{}
-	response := httpGet("orgs/"+idOrg, "")
+	response, _ := httpGet("orgs/"+idOrg, "")
 	json.Unmarshal([]byte(response), &myOrg)
 	return myOrg
 }
@@ -195,7 +202,7 @@ func GetOrg(idOrg string) Org {
 func GetOrgAccess(idOrg string) []User {
 	var lstUsers EntityAccess
 	url := fmt.Sprintf("orgs/%s/access", idOrg)
-	response := httpGet(url, "")
+	response, _ := httpGet(url, "")
 	json.Unmarshal([]byte(response), &lstUsers)
 	return lstUsers.Users
 }
@@ -203,7 +210,7 @@ func GetOrgAccess(idOrg string) []User {
 // Retrieves information on a specific organization
 func GetOrgWorkspaces(orgId int) []Workspace {
 	lstWorkspaces := []Workspace{}
-	response := httpGet("orgs/"+strconv.Itoa(orgId)+"/workspaces", "")
+	response, _ := httpGet("orgs/"+strconv.Itoa(orgId)+"/workspaces", "")
 	json.Unmarshal([]byte(response), &lstWorkspaces)
 	return lstWorkspaces
 }
@@ -212,7 +219,7 @@ func GetOrgWorkspaces(orgId int) []Workspace {
 func GetWorkspace(workspaceId int) Workspace {
 	workspace := Workspace{}
 	url := fmt.Sprintf("workspaces/%d", workspaceId)
-	response := httpGet(url, "")
+	response, _ := httpGet(url, "")
 	json.Unmarshal([]byte(response), &workspace)
 	return workspace
 }
@@ -265,7 +272,7 @@ func DeleteUser(userId int) {
 func GetWorkspaceAccess(workspaceId int) EntityAccess {
 	workspaceAccess := EntityAccess{}
 	url := fmt.Sprintf("workspaces/%d/access", workspaceId)
-	response := httpGet(url, "")
+	response, _ := httpGet(url, "")
 	json.Unmarshal([]byte(response), &workspaceAccess)
 	return workspaceAccess
 }
@@ -274,7 +281,7 @@ func GetWorkspaceAccess(workspaceId int) EntityAccess {
 func GetDoc(docId string) Doc {
 	doc := Doc{}
 	url := "docs/" + docId
-	response := httpGet(url, "")
+	response, _ := httpGet(url, "")
 	json.Unmarshal([]byte(response), &doc)
 	return doc
 }
@@ -283,7 +290,7 @@ func GetDoc(docId string) Doc {
 func GetDocTables(docId string) Tables {
 	tables := Tables{}
 	url := "docs/" + docId + "/tables"
-	response := httpGet(url, "")
+	response, _ := httpGet(url, "")
 	json.Unmarshal([]byte(response), &tables)
 
 	return tables
@@ -293,7 +300,7 @@ func GetDocTables(docId string) Tables {
 func GetTableColumns(docId string, tableId string) TableColumns {
 	columns := TableColumns{}
 	url := "docs/" + docId + "/tables/" + tableId + "/columns"
-	response := httpGet(url, "")
+	response, _ := httpGet(url, "")
 	json.Unmarshal([]byte(response), &columns)
 
 	return columns
@@ -303,7 +310,7 @@ func GetTableColumns(docId string, tableId string) TableColumns {
 func GetTableRows(docId string, tableId string) TableRows {
 	rows := TableRows{}
 	url := "docs/" + docId + "/tables/" + tableId + "/data"
-	response := httpGet(url, "")
+	response, _ := httpGet(url, "")
 	json.Unmarshal([]byte(response), &rows)
 
 	return rows
@@ -313,7 +320,7 @@ func GetTableRows(docId string, tableId string) TableRows {
 func GetDocAccess(docId string) EntityAccess {
 	var lstUsers EntityAccess
 	url := fmt.Sprintf("docs/%s/access", docId)
-	response := httpGet(url, "")
+	response, _ := httpGet(url, "")
 	json.Unmarshal([]byte(response), &lstUsers)
 	return lstUsers
 }
@@ -384,20 +391,20 @@ func CreateWorkspace(orgId int, workspaceName string) int {
 // Export doc in Grist format (Sqlite)
 func ExportDocGrist(docId string) {
 	url := fmt.Sprintf("docs/%s/download", docId)
-	file := httpGet(url, "")
+	file, _ := httpGet(url, "")
 	fmt.Println(file)
 }
 
 // Export doc in Excel format (XLSX)
 func ExportDocExcel(docId string) {
 	url := fmt.Sprintf("docs/%s/download/xlsx", docId)
-	file := httpGet(url, "")
+	file, _ := httpGet(url, "")
 	fmt.Println(file)
 }
 
 // Returns table content as Dataframe
 func GetTableContent(docId string, tableName string) {
 	url := fmt.Sprintf("docs/%s/download/csv?tableId=%s", docId, tableName)
-	csvFile := httpGet(url, "")
+	csvFile, _ := httpGet(url, "")
 	fmt.Println(csvFile)
 }
