@@ -60,11 +60,17 @@ func Config() {
 	configFile := gristapi.GetConfig()
 	common.DisplayTitle(fmt.Sprintf("Setting the url and token for access to the grist server (%s)", configFile))
 	fmt.Printf("Actual URL : %s\n", os.Getenv("GRIST_URL"))
-	token := "✅"
-	if os.Getenv("GRIST_TOKEN") == "" {
-		token = "❌"
+	token := ""
+	for i := 0; i < len(os.Getenv("GRIST_TOKEN")); i++ {
+		token += "•"
 	}
 	fmt.Printf("Token : %s\n", token)
+	testConnect := "❌"
+	if gristapi.TestConnection() {
+		testConnect = "✅"
+	}
+	fmt.Printf("Connection : %s\n", testConnect)
+
 	fmt.Println("Would you like to configure (Y/N) ?")
 	var goConfig string
 	fmt.Scanln(&goConfig)
@@ -317,6 +323,7 @@ func DisplayOrg(orgId string) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Workspace Id", "Workspace name", "Doc", "Direct users"})
 	var wg sync.WaitGroup
+	// Retrieving the number of documents and users for each workspace
 	for _, ws := range worskspaces {
 		func() {
 			defer wg.Done()
@@ -332,7 +339,12 @@ func DisplayOrg(orgId string) {
 		}()
 	}
 	wg.Wait()
+	// Sorting the list of workspaces by name
+	sort.Slice(lstWsDesc, func(i, j int) bool {
+		return lstWsDesc[i].name < lstWsDesc[j].name
+	})
 
+	// Displaying the list of workspaces
 	for _, desc := range lstWsDesc {
 		table.Append([]string{strconv.Itoa(desc.id), desc.name, strconv.Itoa(desc.nbDoc), strconv.Itoa(desc.nbUser)})
 	}

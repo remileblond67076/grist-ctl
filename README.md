@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2024 Ville Eurométropole Strasbourg
 SPDX-License-Identifier: MIT
 -->
 
-# GRISTcli Command Line Interface (CLI) for Grist
+# GristCTL : Command Line Interface (CLI) for Grist
 
 [![img](https://img.shields.io/badge/code.gouv.fr-contributif-blue.svg)](https://code.gouv.fr/documentation/#quels-degres-douverture-pour-les-codes-sources)
 [![REUSE status](https://api.reuse.software/badge/github.com/Ville-Eurometropole-Strasbourg/grist-ctl)](https://api.reuse.software/info/github.com/Ville-Eurometropole-Strasbourg/grist-ctl)
@@ -235,10 +235,10 @@ foreach ($grp in ('a', 'u')) {
 ```
 
 ```bash
-cat ga_grist_pu.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Direction-"$2";viewers"}' | ./gristctl import users
-cat ga_grist_pu.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Service-"$3";viewers"}' | ./gristctl import users
-cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Direction-"$2";editors"}' | ./gristctl import users
-cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Service-"$3";editors"}' | ./gristctl import users
+cat ga_grist_pu.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Direction-"$2";viewers"}' | gristctl import users
+cat ga_grist_pu.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Service-"$3";viewers"}' | gristctl import users
+cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Direction-"$2";editors"}' | gristctl import users
+cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Service-"$3";editors"}' | gristctl import users
 ```
 
 ## Contributing
