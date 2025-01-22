@@ -427,11 +427,20 @@ func DisplayWorkspaceAccess(workspaceId int) {
 
 // Displays users with access to a document
 func DisplayDocAccess(docId string) {
+	// Getting the document
 	doc := gristapi.GetDoc(docId)
+
+	// Displaying the document name
 	title := fmt.Sprintf("Workspace \"%s\" (n°%d), document \"%s\"", doc.Workspace.Name, doc.Workspace.Id, doc.Name)
 	common.DisplayTitle(title)
 
+	// Displaying the access rights
 	docAccess := gristapi.GetDocAccess(docId)
+	// Sorting users by email (lowercase)
+	sort.Slice(docAccess.Users, func(i, j int) bool {
+		return strings.ToLower(docAccess.Users[i].Email) < strings.ToLower(docAccess.Users[j].Email)
+	})
+
 	fmt.Println(TranslateRole(docAccess.MaxInheritedRole))
 	fmt.Printf("\nDirect users:\n")
 	table := tablewriter.NewWriter(os.Stdout)
