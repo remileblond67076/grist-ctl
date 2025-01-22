@@ -391,11 +391,21 @@ func DisplayWorkspace(workspaceId int) {
 
 // Displays workspace access rights
 func DisplayWorkspaceAccess(workspaceId int) {
+	// Getting the workspace
 	ws := gristapi.GetWorkspace((workspaceId))
-	common.DisplayTitle(fmt.Sprintf("Workspace n°%d access rights : %s", ws.Id, ws.Name))
+	// Displaying the workspace name
+	common.DisplayTitle(fmt.Sprintf("Workspace n°%d : %s", ws.Id, ws.Name))
+
+	// Displaying the access rights
 	wsa := gristapi.GetWorkspaceAccess(workspaceId)
+
+	// Displaying the MaxInheritedRole
 	fmt.Println(TranslateRole(wsa.MaxInheritedRole))
 
+	// Sort users by email (lowercase)
+	sort.Slice(wsa.Users, func(i, j int) bool {
+		return strings.ToLower(wsa.Users[i].Email) < strings.ToLower(wsa.Users[j].Email)
+	})
 	nbUsers := len(wsa.Users)
 	if nbUsers <= 0 {
 		fmt.Println("Accessible to no user")
