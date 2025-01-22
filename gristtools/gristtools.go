@@ -26,24 +26,32 @@ import (
 // Display help message and quit
 func Help() {
 	common.DisplayTitle("GRIST : API querying")
-	fmt.Println(`Accepted orders :
-- config : configure url & token of Grist server
-- get org : organization list
-- get org <id> : organization details
-- get workspace <id>: workspace details
-- get workspace <id> access: list of workspace access rights
-- get doc <id> : document details
-- get doc <id> access : list of document access rights
-- get doc <id> grist : export document as a Grist file (Sqlite) in stdout
-- get doc <id> excel : export document as an Excel file (xlsx) in stdout
-- get doc <id> table <tableName> : export content of a document's table as a CSV file (xlsx) in stdout
-- get users : displays all user rights
-- import users : imports users from standard input
-- purge doc <id> [<number of states to keep>]: purges document history (retains last 3 operations by default)
-- delete doc <id> : delete a document
-- delete user <id> : delete a user
-- delete workspace <id> : delete a workspace
-- version : displays the version of the program`)
+	commands := []string{
+		"config : configure url & token of Grist server",
+		"get org : organization list",
+		"get org <id> : organization details",
+		"get workspace <id>: workspace details",
+		"get workspace <id> access: list of workspace access rights",
+		"get doc <id> : document details",
+		"get doc <id> access : list of document access rights",
+		"get doc <id> grist : export document as a Grist file (Sqlite) in stdout",
+		"get doc <id> excel : export document as an Excel file (xlsx) in stdout",
+		"get doc <id> table <tableName> : export content of a document's table as a CSV file (xlsx) in stdout",
+		"get users : displays all user rights",
+		"import users : imports users from standard input",
+		"purge doc <id> [<number of states to keep>]: purges document history (retains last 3 operations by default)",
+		"delete doc <id> : delete a document",
+		"delete user <id> : delete a user",
+		"delete workspace <id> : delete a workspace",
+		"version : displays the version of the program",
+	}
+	// Order the commands alphabetically
+	sort.Strings(commands)
+
+	fmt.Println("Accepted orders :")
+	for _, command := range commands {
+		fmt.Printf("- %s\n", command)
+	}
 	os.Exit(0)
 }
 
@@ -383,7 +391,6 @@ func DisplayWorkspace(workspaceId int) {
 
 // Displays workspace access rights
 func DisplayWorkspaceAccess(workspaceId int) {
-
 	ws := gristapi.GetWorkspace((workspaceId))
 	common.DisplayTitle(fmt.Sprintf("Workspace n°%d access rights : %s", ws.Id, ws.Name))
 	wsa := gristapi.GetWorkspaceAccess(workspaceId)
