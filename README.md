@@ -256,4 +256,6 @@ Please ensure that your code adheres to the project's coding style and includes 
 
 ## License
 
-This project is licensed under the MIT License
+This project is licensed under the MIT License - see [LICENCE](LICENCE) for details.
+
+This project includes third-party libraries, which are licensed under their own respective Open Source licenses. SPDX-License-Identifier headers are used to show which license is applicable. The concerning license files can be found in the LICENSES directory.
