@@ -186,18 +186,27 @@ func ImportUsers() {
 		line := scanner.Text()
 		data := strings.Split(line, ";")
 		if len(data) == 4 {
+			var lineOk bool = true
 			newUserAccess := userAccess{}
 			newUserAccess.Mail = data[0]
+			if !common.IsValidEmail(newUserAccess.Mail) {
+				lineOk = false
+			}
 			orgId, errOrg := strconv.Atoi(data[1])
 			if errOrg != nil {
 				fmt.Printf("ERROR : org id should be an integer : %s\n", data[1])
+				lineOk = false
 			}
 			newUserAccess.OrgId = orgId
 			newUserAccess.WorkspaceName = data[2]
 			newUserAccess.Role = data[3]
-			lstUserAccess = append(lstUserAccess, newUserAccess)
+			if lineOk {
+				lstUserAccess = append(lstUserAccess, newUserAccess)
+			} else {
+				fmt.Printf("ERROR : badly formatted line : %s\n", line)
+			}
 		} else {
-			fmt.Printf("Badly formatted line : %s", line)
+			fmt.Printf("ERROR : badly formatted line (should have 4 columns): %s\n", line)
 		}
 	}
 
