@@ -146,9 +146,9 @@ func httpRequest(action string, myRequest string, data *bytes.Buffer) (string, i
 func httpGet(myRequest string, data string) (string, int) {
 	dataBody := bytes.NewBuffer([]byte(data))
 	body, status := httpRequest("GET", myRequest, dataBody)
-	if status != http.StatusOK {
-		fmt.Printf("Return code from %s : %d (%s)\n", myRequest, status, body)
-	}
+	// if status != http.StatusOK {
+	// 	fmt.Printf("Return code from %s : %d (%s)\n", myRequest, status, body)
+	// }
 	return body, status
 }
 
@@ -215,12 +215,14 @@ func GetOrgWorkspaces(orgId int) []Workspace {
 	return lstWorkspaces
 }
 
-// Recovers a workspace
+// Get a workspace
 func GetWorkspace(workspaceId int) Workspace {
 	workspace := Workspace{}
 	url := fmt.Sprintf("workspaces/%d", workspaceId)
-	response, _ := httpGet(url, "")
-	json.Unmarshal([]byte(response), &workspace)
+	response, returnCode := httpGet(url, "")
+	if returnCode == http.StatusOK {
+		json.Unmarshal([]byte(response), &workspace)
+	}
 	return workspace
 }
 

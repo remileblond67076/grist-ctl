@@ -261,68 +261,75 @@ func DisplayDoc(docId string) {
 	// Getting the document
 	doc := gristapi.GetDoc(docId)
 
-	type TableDetails struct {
-		name       string
-		nb_rows    int
-		nb_cols    int
-		cols_names []string
-	}
+	if doc.Id == "" {
+		fmt.Printf("❗️ Document %s not found ❗️\n", docId)
+	} else {
+		// Document was found
 
-	// Displaying the document name
-	titleColor := color.New(color.FgRed).SprintFunc()
-	pinned := ""
-	if doc.IsPinned {
-		pinned = "📌"
-	}
-	common.DisplayTitle(fmt.Sprintf("Document %s (%s) %s", titleColor(doc.Name), doc.Id, pinned))
+		type TableDetails struct {
+			name       string
+			nb_rows    int
+			nb_cols    int
+			cols_names []string
+		}
 
-	// Getting the doc's tables
-	var tables gristapi.Tables = gristapi.GetDocTables(docId)
-	fmt.Printf("Contains %d tables :\n", len(tables.Tables))
+		// Displaying the document name
+		titleColor := color.New(color.FgRed).SprintFunc()
+		pinned := ""
+		if doc.IsPinned {
+			pinned = "📌"
+		}
+		common.DisplayTitle(fmt.Sprintf("Document %s (%s) %s", titleColor(doc.Name), doc.Id, pinned))
 
-	// Getting the tables details
-	var wg sync.WaitGroup
-	var tables_details []TableDetails
-	for _, table := range tables.Tables {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			table_desc := ""
-			columns := gristapi.GetTableColumns(docId, table.Id)
-			rows := gristapi.GetTableRows(docId, table.Id)
+		// Getting the doc's tables
+		var tables gristapi.Tables = gristapi.GetDocTables(docId)
+		fmt.Printf("Contains %d tables :\n", len(tables.Tables))
 
-			var cols_names []string
-			for _, col := range columns.Columns {
-				cols_names = append(cols_names, col.Id)
-			}
-			slices.Sort(cols_names)
-			for _, col := range cols_names {
-				table_desc += fmt.Sprintf("%s ", col)
-			}
-			table_info := TableDetails{
-				name:       table.Id,
-				nb_rows:    len(rows.Id),
-				nb_cols:    len(columns.Columns),
-				cols_names: cols_names,
-			}
-			tables_details = append(tables_details, table_info)
-		}()
-	}
-	wg.Wait()
+		// Getting the tables details
+		var wg sync.WaitGroup
+		var tables_details []TableDetails
+		for _, table := range tables.Tables {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				table_desc := ""
+				columns := gristapi.GetTableColumns(docId, table.Id)
+				rows := gristapi.GetTableRows(docId, table.Id)
 
-	// Displaying the tables details
-	tableView := tablewriter.NewWriter(os.Stdout)
-	tableView.SetHeader([]string{"Table", "Nb columns", "Columns", "Rows"})
-	for _, table_details := range tables_details {
-		for i, col_name := range table_details.cols_names {
-			if i == 0 {
-				tableView.Append([]string{table_details.name, strconv.Itoa(table_details.nb_cols), col_name, strconv.Itoa(table_details.nb_rows)})
-			} else {
-				tableView.Append([]string{"", "", col_name, ""})
+				var cols_names []string
+				for _, col := range columns.Columns {
+					cols_names = append(cols_names, col.Id)
+				}
+				slices.Sort(cols_names)
+				for _, col := range cols_names {
+					table_desc += fmt.Sprintf("%s ", col)
+				}
+				table_info := TableDetails{
+					name:       table.Id,
+					nb_rows:    len(rows.Id),
+					nb_cols:    len(columns.Columns),
+					cols_names: cols_names,
+				}
+				tables_details = append(tables_details, table_info)
+			}()
+		}
+		wg.Wait()
+
+		// Displaying the tables details
+		tableView := tablewriter.NewWriter(os.Stdout)
+		tableView.SetHeader([]string{"Table", "Nb columns", "Columns", "Rows"})
+		for _, table_details := range tables_details {
+			for i, col_name := range table_details.cols_names {
+				if i == 0 {
+					tableView.Append([]string{table_details.name, strconv.Itoa(table_details.nb_cols), col_name, strconv.Itoa(table_details.nb_rows)})
+				} else {
+					tableView.Append([]string{"", "", col_name, ""})
+				}
 			}
 		}
+		tableView.Render()
 	}
-	tableView.Render()
+
 }
 
 // Displays the list of accessible organizations
@@ -354,67 +361,77 @@ func DisplayOrg(orgId string) {
 	var lstWsDesc []wpDesc
 
 	org := gristapi.GetOrg(orgId)
-	worskspaces := gristapi.GetOrgWorkspaces(org.Id)
-	common.DisplayTitle(fmt.Sprintf("Organization n°%d : %s (%d workspaces)", org.Id, org.Name, len(worskspaces)))
+	if org.Id == 0 {
+		fmt.Printf("❗️ Organization %s not found ❗️\n", orgId)
+	} else {
+		// Org was found
+		worskspaces := gristapi.GetOrgWorkspaces(org.Id)
+		common.DisplayTitle(fmt.Sprintf("Organization n°%d : %s (%d workspaces)", org.Id, org.Name, len(worskspaces)))
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Workspace Id", "Workspace name", "Doc", "Direct users"})
-	var wg sync.WaitGroup
-	// Retrieving the number of documents and users for each workspace
-	for _, ws := range worskspaces {
-		func() {
-			defer wg.Done()
-			wg.Add(1)
-			users := gristapi.GetWorkspaceAccess(ws.Id)
-			nbUsers := 0
-			for _, user := range users.Users {
-				if user.Access != "" {
-					nbUsers += 1
+		table := tablewriter.NewWriter(os.Stdout)
+		table.SetHeader([]string{"Workspace Id", "Workspace name", "Doc", "Direct users"})
+		var wg sync.WaitGroup
+		// Retrieving the number of documents and users for each workspace
+		for _, ws := range worskspaces {
+			func() {
+				defer wg.Done()
+				wg.Add(1)
+				users := gristapi.GetWorkspaceAccess(ws.Id)
+				nbUsers := 0
+				for _, user := range users.Users {
+					if user.Access != "" {
+						nbUsers += 1
+					}
 				}
-			}
-			lstWsDesc = append(lstWsDesc, wpDesc{ws.Id, ws.Name, len(ws.Docs), nbUsers})
-		}()
-	}
-	wg.Wait()
-	// Sorting the list of workspaces by name
-	sort.Slice(lstWsDesc, func(i, j int) bool {
-		return lstWsDesc[i].name < lstWsDesc[j].name
-	})
+				lstWsDesc = append(lstWsDesc, wpDesc{ws.Id, ws.Name, len(ws.Docs), nbUsers})
+			}()
+		}
+		wg.Wait()
+		// Sorting the list of workspaces by name
+		sort.Slice(lstWsDesc, func(i, j int) bool {
+			return lstWsDesc[i].name < lstWsDesc[j].name
+		})
 
-	// Displaying the list of workspaces
-	for _, desc := range lstWsDesc {
-		table.Append([]string{strconv.Itoa(desc.id), desc.name, strconv.Itoa(desc.nbDoc), strconv.Itoa(desc.nbUser)})
+		// Displaying the list of workspaces
+		for _, desc := range lstWsDesc {
+			table.Append([]string{strconv.Itoa(desc.id), desc.name, strconv.Itoa(desc.nbDoc), strconv.Itoa(desc.nbUser)})
+		}
+		table.Render()
 	}
-	table.Render()
 }
 
-// Affiche des détails d'un Workspace
+// Display a Workspace
 func DisplayWorkspace(workspaceId int) {
 
 	// Getting the workspace
 	ws := gristapi.GetWorkspace(workspaceId)
-	common.DisplayTitle(fmt.Sprintf("Organization n°%d : \"%s\", workspace n°%d : \"%s\"", ws.Org.Id, ws.Org.Name, ws.Id, ws.Name))
-
-	// Sort the documents by name (lowercase)
-	sort.Slice(ws.Docs, func(i, j int) bool {
-		return strings.ToLower(ws.Docs[i].Name) < strings.ToLower(ws.Docs[j].Name)
-	})
-
-	// Listing the documents
-	if len(ws.Docs) > 0 {
-		fmt.Printf("Contains %d documents :\n", len(ws.Docs))
-		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"Id", "Name", "Pinned"})
-		for _, doc := range ws.Docs {
-			pin := ""
-			if doc.IsPinned {
-				pin = "📌"
-			}
-			table.Append([]string{doc.Id, doc.Name, pin})
-		}
-		table.Render()
+	if ws.Id == 0 {
+		fmt.Printf("❗️ Workspace %d not found ❗️\n", workspaceId)
 	} else {
-		fmt.Println("No documents")
+		// Workspace was found
+		common.DisplayTitle(fmt.Sprintf("Organization n°%d : \"%s\", workspace n°%d : \"%s\"", ws.Org.Id, ws.Org.Name, ws.Id, ws.Name))
+
+		// Sort the documents by name (lowercase)
+		sort.Slice(ws.Docs, func(i, j int) bool {
+			return strings.ToLower(ws.Docs[i].Name) < strings.ToLower(ws.Docs[j].Name)
+		})
+
+		// Listing the documents
+		if len(ws.Docs) > 0 {
+			fmt.Printf("Contains %d documents :\n", len(ws.Docs))
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"Id", "Name", "Pinned"})
+			for _, doc := range ws.Docs {
+				pin := ""
+				if doc.IsPinned {
+					pin = "📌"
+				}
+				table.Append([]string{doc.Id, doc.Name, pin})
+			}
+			table.Render()
+		} else {
+			fmt.Println("No documents")
+		}
 	}
 }
 
@@ -422,35 +439,41 @@ func DisplayWorkspace(workspaceId int) {
 func DisplayWorkspaceAccess(workspaceId int) {
 	// Getting the workspace
 	ws := gristapi.GetWorkspace((workspaceId))
-	// Displaying the workspace name
-	common.DisplayTitle(fmt.Sprintf("Workspace n°%d : %s", ws.Id, ws.Name))
-
-	// Displaying the access rights
-	wsa := gristapi.GetWorkspaceAccess(workspaceId)
-
-	// Displaying the MaxInheritedRole
-	fmt.Println(TranslateRole(wsa.MaxInheritedRole))
-
-	// Sort users by email (lowercase)
-	sort.Slice(wsa.Users, func(i, j int) bool {
-		return strings.ToLower(wsa.Users[i].Email) < strings.ToLower(wsa.Users[j].Email)
-	})
-	nbUsers := len(wsa.Users)
-	if nbUsers <= 0 {
-		fmt.Println("Accessible to no user")
+	if ws.Id == 0 {
+		fmt.Printf("❗️ Workspace %d not found ❗️\n", workspaceId)
 	} else {
-		nbUser := 0
-		fmt.Println("\nAccessible to the following users :")
-		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"Id", "Nom", "Email", "Inherited access", "Direct access"})
-		for _, user := range wsa.Users {
-			if user.Access != "" || user.ParentAccess != "" {
-				table.Append([]string{strconv.Itoa(user.Id), user.Name, user.Email, user.ParentAccess, user.Access})
-				nbUser += 1
+		// Workspace was found
+
+		// Displaying the workspace name
+		common.DisplayTitle(fmt.Sprintf("Workspace n°%d : %s", ws.Id, ws.Name))
+
+		// Displaying the access rights
+		wsa := gristapi.GetWorkspaceAccess(workspaceId)
+
+		// Displaying the MaxInheritedRole
+		fmt.Println(TranslateRole(wsa.MaxInheritedRole))
+
+		// Sort users by email (lowercase)
+		sort.Slice(wsa.Users, func(i, j int) bool {
+			return strings.ToLower(wsa.Users[i].Email) < strings.ToLower(wsa.Users[j].Email)
+		})
+		nbUsers := len(wsa.Users)
+		if nbUsers <= 0 {
+			fmt.Println("Accessible to no user")
+		} else {
+			nbUser := 0
+			fmt.Println("\nAccessible to the following users :")
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"Id", "Nom", "Email", "Inherited access", "Direct access"})
+			for _, user := range wsa.Users {
+				if user.Access != "" || user.ParentAccess != "" {
+					table.Append([]string{strconv.Itoa(user.Id), user.Name, user.Email, user.ParentAccess, user.Access})
+					nbUser += 1
+				}
 			}
+			table.Render()
+			fmt.Printf("%d users\n", nbUser)
 		}
-		table.Render()
-		fmt.Printf("%d users\n", nbUser)
 	}
 }
 
@@ -458,28 +481,34 @@ func DisplayWorkspaceAccess(workspaceId int) {
 func DisplayDocAccess(docId string) {
 	// Getting the document
 	doc := gristapi.GetDoc(docId)
+	if doc.Name == "" {
+		fmt.Printf("❗️ Document %s not found ❗️\n", docId)
+	} else {
+		// Document was found
 
-	// Displaying the document name
-	title := fmt.Sprintf("Workspace \"%s\" (n°%d), document \"%s\"", doc.Workspace.Name, doc.Workspace.Id, doc.Name)
-	common.DisplayTitle(title)
+		// Displaying the document name
+		title := fmt.Sprintf("Workspace \"%s\" (n°%d), document \"%s\"", doc.Workspace.Name, doc.Workspace.Id, doc.Name)
+		common.DisplayTitle(title)
 
-	// Displaying the access rights
-	docAccess := gristapi.GetDocAccess(docId)
-	// Sorting users by email (lowercase)
-	sort.Slice(docAccess.Users, func(i, j int) bool {
-		return strings.ToLower(docAccess.Users[i].Email) < strings.ToLower(docAccess.Users[j].Email)
-	})
+		// Displaying the access rights
+		docAccess := gristapi.GetDocAccess(docId)
+		// Sorting users by email (lowercase)
+		sort.Slice(docAccess.Users, func(i, j int) bool {
+			return strings.ToLower(docAccess.Users[i].Email) < strings.ToLower(docAccess.Users[j].Email)
+		})
 
-	fmt.Println(TranslateRole(docAccess.MaxInheritedRole))
-	fmt.Printf("\nDirect users:\n")
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Id", "Email", "Nom", "Inherited access", "Direct access"})
-	for _, user := range docAccess.Users {
-		if user.Access != "" {
-			table.Append([]string{strconv.Itoa(user.Id), user.Email, user.Name, user.ParentAccess, user.Access})
+		fmt.Println(TranslateRole(docAccess.MaxInheritedRole))
+		fmt.Printf("\nDirect users:\n")
+		table := tablewriter.NewWriter(os.Stdout)
+		table.SetHeader([]string{"Id", "Email", "Nom", "Inherited access", "Direct access"})
+		for _, user := range docAccess.Users {
+			if user.Access != "" {
+				table.Append([]string{strconv.Itoa(user.Id), user.Email, user.Name, user.ParentAccess, user.Access})
+			}
 		}
+		table.Render()
 	}
-	table.Render()
+
 }
 
 // Displaying the rights matrix
