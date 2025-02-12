@@ -589,3 +589,23 @@ func DeleteUser(userId int) {
 		gristapi.DeleteUser(userId)
 	}
 }
+
+// Export a document as a Grist file
+func ExportDocGrist(docId string) {
+	doc := gristapi.GetDoc(docId)
+	if doc.Name != "" {
+		gristapi.ExportDocGrist(docId, doc.Workspace.Name+"_"+doc.Name+".grist")
+	} else {
+		fmt.Printf("❗️ Document %s not found ❗️\n", docId)
+	}
+}
+
+// Export a document as an Excel file
+func ExportDocExcel(docId string) {
+	doc := gristapi.GetDoc(docId)
+	if doc.Name != "" {
+		gristapi.ExportDocExcel(docId, doc.Workspace.Name+"_"+doc.Name+".xlsx")
+	} else {
+		fmt.Printf("❗️ Document %s not found ❗️\n", docId)
+	}
+}

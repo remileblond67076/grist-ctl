@@ -63,9 +63,9 @@ func main() {
 							case "access":
 								gristtools.DisplayDocAccess(docId)
 							case "grist":
-								gristapi.ExportDocGrist(docId)
+								gristtools.ExportDocGrist(docId)
 							case "excel":
-								gristapi.ExportDocExcel(docId)
+								gristtools.ExportDocExcel(docId)
 							default:
 								fmt.Println("You have to choose between 'access', 'grist', or 'excel'")
 							}
