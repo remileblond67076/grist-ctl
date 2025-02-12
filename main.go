@@ -138,7 +138,7 @@ func main() {
 					if len(args) == 3 {
 						idWorkspace, err := strconv.Atoi(args[2])
 						if err == nil {
-							gristapi.DeleteWorkspace(idWorkspace)
+							gristtools.DeleteWorkspace(idWorkspace)
 						}
 					} else {
 						gristtools.Help()
@@ -147,7 +147,7 @@ func main() {
 					if len(args) == 3 {
 						idUser, err := strconv.Atoi(args[2])
 						if err == nil {
-							gristapi.DeleteUser(idUser)
+							gristtools.DeleteUser(idUser)
 						}
 					} else {
 						gristtools.Help()
@@ -155,7 +155,7 @@ func main() {
 				case "doc":
 					if len(args) == 3 {
 						docId := args[2]
-						gristapi.DeleteDoc(docId)
+						gristtools.DeleteDoc(docId)
 					}
 				default:
 					gristtools.Help()

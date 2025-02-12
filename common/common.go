@@ -28,3 +28,13 @@ func DisplayTitle(txt string) {
 func IsValidEmail(mail string) bool {
 	return strings.Contains(mail, "@")
 }
+
+// Confirm a question
+func Confirm(question string) bool {
+	var response string
+
+	fmt.Printf("%s [y/n] ", question)
+	fmt.Scanln(&response)
+
+	return strings.ToLower(response) == "y"
+}

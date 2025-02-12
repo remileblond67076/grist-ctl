@@ -539,3 +539,24 @@ func DisplayUserMatrix() {
 	}
 	table.Render()
 }
+
+// Delete a workspace
+func DeleteWorkspace(workspaceId int) {
+	if common.Confirm(fmt.Sprintf("Do you really want to delete workspace %d ?", workspaceId)) {
+		gristapi.DeleteWorkspace(workspaceId)
+	}
+}
+
+// Delete a document
+func DeleteDoc(docId string) {
+	if common.Confirm(fmt.Sprintf("Do you really want to delete document %s ?", docId)) {
+		gristapi.DeleteDoc(docId)
+	}
+}
+
+// Delete a user
+func DeleteUser(userId int) {
+	if common.Confirm(fmt.Sprintf("Do you really want to delete user %d ?", userId)) {
+		gristapi.DeleteUser(userId)
+	}
+}
