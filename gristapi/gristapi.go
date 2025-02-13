@@ -146,9 +146,9 @@ func httpRequest(action string, myRequest string, data *bytes.Buffer) (string, i
 func httpGet(myRequest string, data string) (string, int) {
 	dataBody := bytes.NewBuffer([]byte(data))
 	body, status := httpRequest("GET", myRequest, dataBody)
-	if status != http.StatusOK {
-		fmt.Printf("Return code from %s : %d (%s)\n", myRequest, status, body)
-	}
+	// if status != http.StatusOK {
+	// 	fmt.Printf("Return code from %s : %d (%s)\n", myRequest, status, body)
+	// }
 	return body, status
 }
 
@@ -215,12 +215,14 @@ func GetOrgWorkspaces(orgId int) []Workspace {
 	return lstWorkspaces
 }
 
-// Recovers a workspace
+// Get a workspace
 func GetWorkspace(workspaceId int) Workspace {
 	workspace := Workspace{}
 	url := fmt.Sprintf("workspaces/%d", workspaceId)
-	response, _ := httpGet(url, "")
-	json.Unmarshal([]byte(response), &workspace)
+	response, returnCode := httpGet(url, "")
+	if returnCode == http.StatusOK {
+		json.Unmarshal([]byte(response), &workspace)
+	}
 	return workspace
 }
 
@@ -388,18 +390,32 @@ func CreateWorkspace(orgId int, workspaceName string) int {
 	return idWorkspace
 }
 
-// Export doc in Grist format (Sqlite)
-func ExportDocGrist(docId string) {
+// Export doc in Grist format (Sqlite) in fileName file
+func ExportDocGrist(docId string, fileName string) {
 	url := fmt.Sprintf("docs/%s/download", docId)
-	file, _ := httpGet(url, "")
-	fmt.Println(file)
+	export, returnCode := httpGet(url, "")
+	if returnCode == http.StatusOK {
+		f, e := os.Create(fileName)
+		if e != nil {
+			panic(e)
+		}
+		defer f.Close()
+		fmt.Fprintln(f, export)
+	}
 }
 
-// Export doc in Excel format (XLSX)
-func ExportDocExcel(docId string) {
+// Export doc in Excel format (XLSX) in fileName file
+func ExportDocExcel(docId string, fileName string) {
 	url := fmt.Sprintf("docs/%s/download/xlsx", docId)
-	file, _ := httpGet(url, "")
-	fmt.Println(file)
+	export, returnCode := httpGet(url, "")
+	if returnCode == http.StatusOK {
+		f, e := os.Create(fileName)
+		if e != nil {
+			panic(e)
+		}
+		defer f.Close()
+		fmt.Fprintln(f, export)
+	}
 }
 
 // Returns table content as Dataframe

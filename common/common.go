@@ -23,3 +23,18 @@ func Title(txt string) string {
 func DisplayTitle(txt string) {
 	fmt.Println(Title(txt))
 }
+
+// Check if an email is valid
+func IsValidEmail(mail string) bool {
+	return strings.Contains(mail, "@")
+}
+
+// Confirm a question
+func Confirm(question string) bool {
+	var response string
+
+	fmt.Printf("%s [y/n] ", question)
+	fmt.Scanln(&response)
+
+	return strings.ToLower(response) == "y"
+}
