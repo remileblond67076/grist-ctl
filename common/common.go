@@ -38,3 +38,13 @@ func Confirm(question string) bool {
 
 	return strings.ToLower(response) == "y"
 }
+
+// Ask a question and return the response
+func Ask(question string) string {
+	var response string
+
+	fmt.Printf("%s : ", question)
+	fmt.Scanln(&response)
+
+	return response
+}

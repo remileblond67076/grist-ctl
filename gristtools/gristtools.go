@@ -75,12 +75,12 @@ Interactive filling the `.gristctl` file
 func Config() {
 	configFile := gristapi.GetConfig()
 	common.DisplayTitle(fmt.Sprintf("Setting the url and token for access to the grist server (%s)", configFile))
-	fmt.Printf("Actual URL : %s\n", os.Getenv("GRIST_URL"))
+	fmt.Printf("Actual config :\n- URL : %s\n", os.Getenv("GRIST_URL"))
 	token := ""
 	for i := 0; i < len(os.Getenv("GRIST_TOKEN")); i++ {
 		token += "•"
 	}
-	fmt.Printf("Token : %s\n", token)
+	fmt.Printf("- Token : %s\n", token)
 	testConnect := "❌"
 	if gristapi.TestConnection() {
 		testConnect = "✅"
@@ -91,17 +91,14 @@ func Config() {
 		var url string
 		urlSet := false
 		for urlSet == false {
-			fmt.Print("Grist server URL (that starts with https:// and without '/' in the end): ")
-			fmt.Scanln(&url)
+			url = common.Ask("Grist server URL (that starts with https:// and without '/' in the end)")
 
 			// Test if url is well formatted
 			urlOk, _ := regexp.MatchString(`^https?://.*[^/]$`, url)
 			urlSet = urlOk
 		}
-		fmt.Print("User token (API key) : ")
-		var token string
-		fmt.Scanln(&token)
-		if common.Confirm(fmt.Sprintf("Url : %s --- Token: %s\nIs it OK (Y/N) ? ", url, token)) {
+		var token = common.Ask("User token (API key)")
+		if common.Confirm(fmt.Sprintf("New config :\n- URL : %s\n- Token: %s\nIs it OK (Y/N) ? ", url, token)) {
 			f, err := os.Create(configFile)
 			if err != nil {
 				fmt.Printf("Error on creating %s file (%s)", configFile, err)
