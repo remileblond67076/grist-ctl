@@ -34,21 +34,21 @@ func Help() {
 	cmdColor := color.New(color.FgRed).SprintFunc()
 	commands := []command{
 		{"config", "configure url & token of Grist server"},
-		{"get org", "organization list"},
-		{"get org <id>", "organization details"},
-		{"get workspace <id>", "workspace details"},
-		{"get workspace <id> access", "list of workspace access rights"},
-		{"get doc <id>", "document details"},
-		{"get doc <id> access", "list of document access rights"},
-		{"get doc <id> grist", "export document as a Grist file (Sqlite) in stdout"},
-		{"get doc <id> excel", "export document as an Excel file (xlsx) in stdout"},
-		{"get doc <id> table <tableName>", "export content of a document's table as a CSV file (xlsx) in stdout"},
-		{"get users", "displays all user rights"},
-		{"import users", "imports users from standard input"},
-		{"purge doc <id> [<number of states to keep>]", "purges document history (retains last 3 operations by default)"},
 		{"delete doc <id>", "delete a document"},
 		{"delete user <id>", "delete a user"},
 		{"delete workspace <id>", "delete a workspace"},
+		{"get doc <id> access", "list of document access rights"},
+		{"get doc <id> excel", "export document as <workspace name>_<doc name>.xlsx Excel file"},
+		{"get doc <id> grist", "export document as <workspace name>_<doc name>.grist Grist file"},
+		{"get doc <id> table <tableName>", "export content of a document's table as a CSV file (xlsx) in stdout"},
+		{"get doc <id>", "document details"},
+		{"get org <id>", "organization details"},
+		{"get org", "organization list"},
+		{"get users", "displays all user rights"},
+		{"get workspace <id> access", "list of workspace access rights"},
+		{"get workspace <id>", "workspace details"},
+		{"import users", "imports users from standard input"},
+		{"purge doc <id> [<number of states to keep>]", "purges document history (retains last 3 operations by default)"},
 		{"version", "displays the version of the program"},
 	}
 	// Sort commands by name
@@ -87,12 +87,7 @@ func Config() {
 	}
 	fmt.Printf("Connection : %s\n", testConnect)
 
-	fmt.Println("Would you like to configure (Y/N) ?")
-	var goConfig string
-	fmt.Scanln(&goConfig)
-
-	switch response := strings.ToLower(goConfig); response {
-	case "y":
+	if common.Confirm("Would you like to configure (Y/N) ?") {
 		var url string
 		urlSet := false
 		for urlSet == false {
@@ -106,11 +101,7 @@ func Config() {
 		fmt.Print("User token (API key) : ")
 		var token string
 		fmt.Scanln(&token)
-		fmt.Printf("Url : %s --- Token: %s\nIs it OK (Y/N) ? ", url, token)
-		var ok string
-		fmt.Scanln(&ok)
-		switch strings.ToLower(ok) {
-		case "y":
+		if common.Confirm(fmt.Sprintf("Url : %s --- Token: %s\nIs it OK (Y/N) ? ", url, token)) {
 			f, err := os.Create(configFile)
 			if err != nil {
 				fmt.Printf("Error on creating %s file (%s)", configFile, err)
@@ -128,12 +119,7 @@ func Config() {
 				fmt.Println("Error on connecting to the server. The config looks wrong.")
 				os.Exit(-1)
 			}
-
-		default:
-			os.Exit(0)
 		}
-	default:
-		fmt.Println("Keeping all in place...")
 	}
 }
 

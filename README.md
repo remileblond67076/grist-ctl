@@ -129,23 +129,25 @@ GRIST_URL="https://<GRIST server URL, without /api>"
 
 List of commands :
 
-- `config` : configure url & token of Grist server
-- `delete doc <id>` : delete a document
-- `delete user <id>` : delete a user
-- `delete workspace <id>` : delete a workspace
-- `get doc <id>` : document details
-- `get doc <id>` access : list of document access rights
-- `get doc <id>` excel : export document as an Excel file (xlsx) in stdout
-- `get doc <id>` grist : export document as a Grist file (Sqlite) in stdout
-- `get doc <id>` table <tableName> : export content of a document's table as a CSV file (xlsx) in stdout
-- `get org` : organization list
-- `get org <id>` : organization details
-- `get users` : displays all user rights
-- `get workspace <id> access` : list of workspace access rights
-- `get workspace <id>` : workspace details
-- `import users` : imports users from standard input
-- `purge doc <id> [<number of states to keep>]` : purges document history (retains last 3 operations by default)
-- `version` : displays the version of the program
+| Command                                       | Usage                                                               |
+| --------------------------------------------- | ------------------------------------------------------------------- |
+| `config`                                      | configure url & token of Grist server                               |
+| `delete doc <id>`                             | delete a document                                                   |
+| `delete user <id>`                            | delete a user                                                       |
+| `delete workspace <id>`                       | delete a workspace                                                  |
+| `get doc <id>`                                | document details                                                    |
+| `get doc <id>` access                         | list of document access rights                                      |
+| `get doc <id>` excel                          | export document as `<workspace name>_<doc name>.xlsx` Excel file    |
+| `get doc <id>` grist                          | export document as `<workspace name>_<doc name>.grist` Grist file   |
+| `get doc <id>` table <tableName>              | export content of a document's table as a CSV file (xlsx) in stdout |
+| `get org <id>`                                | organization details                                                |
+| `get org`                                     | organization list                                                   |
+| `get users`                                   | displays all user rights                                            |
+| `get workspace <id> access`                   | list of workspace access rights                                     |
+| `get workspace <id>`                          | workspace details                                                   |
+| `import users`                                | imports users from standard input                                   |
+| `purge doc <id> [<number of states to keep>]` | purges document history (retains last 3 operations by default)      |
+| `version`                                     | displays the version of the program                                 |
 
 ### List Grist organization
 
