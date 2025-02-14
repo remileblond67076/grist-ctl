@@ -136,10 +136,10 @@ List of commands :
 | `delete user <id>`                            | delete a user                                                       |
 | `delete workspace <id>`                       | delete a workspace                                                  |
 | `get doc <id>`                                | document details                                                    |
-| `get doc <id>` access                         | list of document access rights                                      |
-| `get doc <id>` excel                          | export document as `<workspace name>_<doc name>.xlsx` Excel file    |
-| `get doc <id>` grist                          | export document as `<workspace name>_<doc name>.grist` Grist file   |
-| `get doc <id>` table <tableName>              | export content of a document's table as a CSV file (xlsx) in stdout |
+| `get doc <id> access`                         | list of document access rights                                      |
+| `get doc <id> excel`                          | export document as `<workspace name>_<doc name>.xlsx` Excel file    |
+| `get doc <id> grist`                          | export document as `<workspace name>_<doc name>.grist` Grist file   |
+| `get doc <id> table <tableName>`              | export content of a document's table as a CSV file (xlsx) in stdout |
 | `get org <id>`                                | organization details                                                |
 | `get org`                                     | organization list                                                   |
 | `get users`                                   | displays all user rights                                            |
