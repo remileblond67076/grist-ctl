@@ -349,7 +349,8 @@ func DisplayOrg(orgId string) {
 	} else {
 		// Org was found
 		worskspaces := gristapi.GetOrgWorkspaces(org.Id)
-		common.DisplayTitle(fmt.Sprintf("Organization n°%d : %s (%d workspaces)", org.Id, org.Name, len(worskspaces)))
+		common.DisplayTitle(fmt.Sprintf("Organization n°%d : %s", org.Id, org.Name))
+		fmt.Printf("Contains %d workspaces :\n", len(worskspaces))
 
 		table := tablewriter.NewWriter(os.Stdout)
 		table.SetHeader([]string{"Workspace Id", "Workspace name", "Doc", "Direct users"})
@@ -392,7 +393,7 @@ func DisplayWorkspace(workspaceId int) {
 		fmt.Printf("❗️ Workspace %d not found ❗️\n", workspaceId)
 	} else {
 		// Workspace was found
-		common.DisplayTitle(fmt.Sprintf("Organization n°%d : \"%s\", workspace n°%d : \"%s\"", ws.Org.Id, ws.Org.Name, ws.Id, ws.Name))
+		common.DisplayTitle(fmt.Sprintf("Organization n°%d : %s | workspace n°%d : %s", ws.Org.Id, ws.Org.Name, ws.Id, ws.Name))
 
 		// Sort the documents by name (lowercase)
 		sort.Slice(ws.Docs, func(i, j int) bool {
