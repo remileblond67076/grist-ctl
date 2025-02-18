@@ -1,4 +1,9 @@
-MIT License
+<!--
+SPDX-FileCopyrightText: 2024 Ville Eurométropole Strasbourg
+
+SPDX-License-Identifier: MIT
+-->
+# MIT License
 
 Copyright (c) 2024 Ville Eurométropole Strasbourg
 
