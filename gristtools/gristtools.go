@@ -24,37 +24,38 @@ import (
 
 // Display help message and quit
 func Help() {
-	common.DisplayTitle("GRIST : API querying")
+
+	common.DisplayTitle(common.T("app.title"))
 	type command struct {
 		cmd  string
 		help string
 	}
 
 	commands := []command{
-		{"config", "configure url & token of Grist server"},
-		{"delete doc <id>", "delete a document"},
-		{"delete user <id>", "delete a user"},
-		{"delete workspace <id>", "delete a workspace"},
-		{"get doc <id> access", "list of document access rights"},
-		{"get doc <id> excel", "export document as <workspace name>_<doc name>.xlsx Excel file"},
-		{"get doc <id> grist", "export document as <workspace name>_<doc name>.grist Grist file"},
-		{"get doc <id> table <tableName>", "export content of a document's table as a CSV file (xlsx) in stdout"},
-		{"get doc <id>", "document details"},
-		{"get org <id>", "organization details"},
-		{"get org", "organization list"},
-		{"get users", "displays all user rights"},
-		{"get workspace <id> access", "list of workspace access rights"},
-		{"get workspace <id>", "workspace details"},
-		{"import users", "imports users from standard input"},
-		{"purge doc <id> [<number of states to keep>]", "purges document history (retains last 3 operations by default)"},
-		{"version", "displays the version of the program"},
+		{"config", common.T("help.config")},
+		{"delete doc <id>", common.T("help.deleteDoc")},
+		{"delete user <id>", common.T("help.deleteUser")},
+		{"delete workspace <id>", common.T("help.deleteWorkspace")},
+		{"get doc <id> access", common.T("help.docAccess")},
+		{"get doc <id> excel", common.T("help.docExportExcel")},
+		{"get doc <id> grist", common.T("help.docExportGrist")},
+		{"get doc <id> table <tableName>", common.T("help.docExportCsv")},
+		{"get doc <id>", common.T("help.docDesc")},
+		{"get org <id>", common.T("help.orgDesc")},
+		{"get org", common.T("help.orgList")},
+		{"get users", common.T("help.userList")},
+		{"get workspace <id> access", common.T("help.workspaceAccess")},
+		{"get workspace <id>", common.T("help.workspaceDesc")},
+		{"import users", common.T("help.userImport")},
+		{"purge doc <id> [<number of states to keep>]", common.T("help.docPurge")},
+		{"version", common.T("help.version")},
 	}
 	// Sort commands by name
 	sort.Slice(commands, func(i, j int) bool {
 		return commands[i].cmd < commands[j].cmd
 	})
 
-	fmt.Println("Accepted orders :")
+	fmt.Printf("%s :\n", common.T("help.accepted"))
 	for _, command := range commands {
 		fmt.Print("- ")
 		common.PrintCommand(command.cmd)
@@ -75,46 +76,47 @@ Interactive filling the `.gristctl` file
 */
 func Config() {
 	configFile := gristapi.GetConfig()
-	common.DisplayTitle(fmt.Sprintf("Setting the url and token for access to the grist server (%s)", configFile))
-	fmt.Printf("Actual config :\n- URL : %s\n", os.Getenv("GRIST_URL"))
+	common.DisplayTitle(fmt.Sprintf("%s (%s)", common.T("config.title"), configFile))
+	fmt.Printf("%s :\n- URL : %s\n", common.T("config.actual"), os.Getenv("GRIST_URL"))
 	token := ""
 	for i := 0; i < len(os.Getenv("GRIST_TOKEN")); i++ {
 		token += "•"
 	}
-	fmt.Printf("- Token : %s\n", token)
+	fmt.Printf("- %s : %s\n", common.T("config.token"), token)
 	testConnect := "❌"
 	if gristapi.TestConnection() {
 		testConnect = "✅"
 	}
-	fmt.Printf("Connection : %s\n", testConnect)
+	fmt.Printf("%s : %s\n", common.T("config.connectTest"), testConnect)
 
-	if common.Confirm("Would you like to configure (Y/N) ?") {
+	if common.Confirm(common.T("config.config")) {
 		var url string
 		urlSet := false
 		for urlSet == false {
-			url = common.Ask("Grist server URL (that starts with https:// and without '/' in the end)")
+			url = common.Ask(common.T("config.urlSet"))
 
 			// Test if url is well formatted
 			urlOk, _ := regexp.MatchString(`^https?://.*[^/]$`, url)
 			urlSet = urlOk
 		}
-		var token = common.Ask("User token (API key)")
-		if common.Confirm(fmt.Sprintf("New config :\n- URL : %s\n- Token: %s\nIs it OK (Y/N) ? ", url, token)) {
+		var token = common.Ask(common.T("config.token"))
+		if common.Confirm(fmt.Sprintf("\n%s :\n- URL : %s\n- Token: %s\n%s ", common.T("config.new"), url, token, common.T("questions.isOk"))) {
 			f, err := os.Create(configFile)
 			if err != nil {
-				fmt.Printf("Error on creating %s file (%s)", configFile, err)
+				fmt.Printf("%s %s (%s)", common.T("config.saveError"), configFile, err)
 				os.Exit(-1)
 			}
 			defer f.Close()
 			config := fmt.Sprintf("GRIST_URL=\"%s\"\nGRIST_TOKEN=\"%s\"\n", url, token)
 			f.WriteString(config)
 			f.Close()
-			fmt.Printf("Config saved in %s\n", configFile)
+			fmt.Printf("%s %s\n", common.T("config.savedIn"), configFile)
 
 			// Test the configuration by connecting to the server
 			nbOrgs := len(gristapi.GetOrgs())
+			fmt.Printf("Nb orgs : %d\n", nbOrgs)
 			if nbOrgs <= 0 {
-				fmt.Println("Error on connecting to the server. The config looks wrong.")
+				fmt.Println(common.T("config.connectError"))
 				os.Exit(-1)
 			}
 		}
@@ -300,7 +302,7 @@ func DisplayDoc(docId string) {
 
 		// Displaying the tables details
 		tableView := tablewriter.NewWriter(os.Stdout)
-		tableView.SetHeader([]string{"Table", "Nb columns", "Columns", "Rows"})
+		tableView.SetHeader([]string{"Table", common.T("col.nbCols"), common.T("col.columns"), common.T("col.nbRows")})
 		for _, table_details := range tables_details {
 			for i, col_name := range table_details.cols_names {
 				if i == 0 {
@@ -325,7 +327,7 @@ func DisplayOrgs() {
 		return strings.ToLower(lstOrgs[i].Name) < strings.ToLower(lstOrgs[j].Name)
 	})
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Id", "Name"})
+	table.SetHeader([]string{common.T("col.ident"), common.T("col.name")})
 	for _, org := range lstOrgs {
 		table.Append([]string{strconv.Itoa(org.Id), org.Name})
 	}
@@ -349,11 +351,12 @@ func DisplayOrg(orgId string) {
 	} else {
 		// Org was found
 		worskspaces := gristapi.GetOrgWorkspaces(org.Id)
-		common.DisplayTitle(fmt.Sprintf("Organization n°%d : %s", org.Id, org.Name))
-		fmt.Printf("Contains %d workspaces :\n", len(worskspaces))
+		common.DisplayTitle(fmt.Sprintf("%s n°%d : %s", common.T("org.name"), org.Id, org.Name))
+		// fmt.Printf("Contains %d workspaces :\n", len(worskspaces))
+		fmt.Printf("%s %d:\n", common.T("org.contains"), len(worskspaces))
 
 		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"Workspace Id", "Workspace name", "Doc", "Direct users"})
+		table.SetHeader([]string{common.T("col.ident"), common.T("col.name"), common.T("col.nbDocs"), common.T("col.directUsers")})
 		var wg sync.WaitGroup
 		// Retrieving the number of documents and users for each workspace
 		for _, ws := range worskspaces {
@@ -393,7 +396,13 @@ func DisplayWorkspace(workspaceId int) {
 		fmt.Printf("❗️ Workspace %d not found ❗️\n", workspaceId)
 	} else {
 		// Workspace was found
-		common.DisplayTitle(fmt.Sprintf("Organization n°%d : %s | workspace n°%d : %s", ws.Org.Id, ws.Org.Name, ws.Id, ws.Name))
+		common.DisplayTitle(fmt.Sprintf("%s n°%d : '%s' | %s n°%d : '%s'",
+			common.T("org.name"),
+			ws.Org.Id,
+			ws.Org.Name,
+			common.T("workspace.name"),
+			ws.Id,
+			ws.Name))
 
 		// Sort the documents by name (lowercase)
 		sort.Slice(ws.Docs, func(i, j int) bool {
@@ -404,7 +413,7 @@ func DisplayWorkspace(workspaceId int) {
 		if len(ws.Docs) > 0 {
 			fmt.Printf("Contains %d documents :\n", len(ws.Docs))
 			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"Id", "Name", "Pinned"})
+			table.SetHeader([]string{common.T("col.ident"), common.T("col.name"), common.T("col.pinned")})
 			for _, doc := range ws.Docs {
 				pin := ""
 				if doc.IsPinned {

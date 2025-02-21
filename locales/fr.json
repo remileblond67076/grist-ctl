@@ -1,0 +1,70 @@
+{
+    "app": {
+        "title": "GRIST : Interrogation de l'API"
+    },
+    "col": {
+        "columns": "Colonnes",
+        "directUsers": "Utilisateurs directs",
+        "ident": "Identifiant",
+        "name": "Nom",
+        "nbCols": "Nombre de colonnes",
+        "nbDocs": "Nombre de documents",
+        "nbRows": "Nombre de lignes",
+        "pinned": "Épinglé"
+    },
+    "config": {
+        "actual": "Configuration actuelle",
+        "config": "Voulez-vous configurer (O/N) ?",
+        "connectError": "Erreur de connexion au serveur. La configuration ne semble pas correcte",
+        "connectTest": "Test de connexion",
+        "new": "Nouvelle configuration",
+        "savedIn": "Configuration sauvegardée dans le fichier ",
+        "saveError": "Erreur lors de la sauvegarde de la configuration ",
+        "title": "Configuration de l'url et du token pour accéder au serveur Grist",
+        "token": "Clé d'API de l'utilisateur",
+        "url": "URL du serveur Grist",
+        "urlSet": "URL du serveur Grist (commençant par https:// et sans '/' à la fin)"
+    },
+    "help": {
+        "accepted": "Commandes acceptées",
+        "config": "configurer l'url et le token du serveur Grist",
+        "deleteDoc": "supprimer un document",
+        "deleteUser": "supprimer un utilisateur",
+        "deleteWorkspace": "supprimer un espace de travail",
+        "docAccess": "lister des utilisateurs ayant accès au document",
+        "docDesc": "afficher la description du document",
+        "docExportCsv": "exporter la table d'un document au format CSV sur la sortie standard",
+        "docExportExcel": "exporter un document au format Excel (fichier '<workspace name>_<doc name>.xlsx')",
+        "docExportGrist": "exporter un document au format Grist (fichier '<workspace name>_<doc name>.grist')",
+        "docPurge": "purger l'historique d'un document (en conservant par défaut les 3 dernières opérations)",
+        "orgDesc": "afficher la description de l'organisation",
+        "orgList": "lister des organisations",
+        "userImport": "importer des utilisateurs depuis l'entrée standard",
+        "userList": "lister des utilisateurs avec leurs rôles",
+        "version": "afficher la version du programme",
+        "workspaceAccess": "lister des utilisateurs ayant accès à l'espace de travail",
+        "workspaceDesc": "afficher la description de l'espace de travail"
+    },
+    "org": {
+        "contains": "Contient {{.nb}} espace(s) de travail",
+        "name": "Organisation"
+    },
+    "questions": {
+        "abort": "abandonner",
+        "cancel": "annuler",
+        "confirm": "confirmer",
+        "continue": "continuer",
+        "exit": "sortir",
+        "isOk": "Est-ce ok (O/N) ?",
+        "n": "n",
+        "no": "Non",
+        "ok": "ok",
+        "quit": "quitter",
+        "y": "o",
+        "yes": "Oui"
+    },
+    "workspace": {
+        "contains": "Contient {{.nb}} document(s)",
+        "name": "Espace de travail"
+    }
+}

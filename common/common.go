@@ -6,13 +6,42 @@
 package common
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 	"unicode/utf8"
 
+	"github.com/Xuanwo/go-locale"
 	"github.com/mattn/go-colorable"
 	"github.com/muesli/termenv"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"golang.org/x/text/language"
 )
+
+var localizer *i18n.Localizer // Global localizer
+var bundle *i18n.Bundle       // Global bundle
+
+func init() {
+	// Detect the language
+	tag, err := locale.Detect()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Initialize i18n with English (default) and French languages
+	bundle = i18n.NewBundle(language.English)            // Default language
+	bundle.RegisterUnmarshalFunc("json", json.Unmarshal) // Register JSON unmarshal function
+	bundle.LoadMessageFile("locales/en.json")            // Load English messages
+	bundle.LoadMessageFile("locales/fr.json")            // Load French messages
+
+	localizer = i18n.NewLocalizer(bundle, language.Tag.String(tag)) // Initialize localizer with detected language
+}
+
+// Translate a message
+func T(msg string) string {
+	return localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: msg})
+}
 
 // Format string as a title
 func Title(txt string) string {
@@ -37,10 +66,10 @@ func IsValidEmail(mail string) bool {
 func Confirm(question string) bool {
 	var response string
 
-	fmt.Printf("%s [y/n] ", question)
+	fmt.Printf("%s [%s/%s] ", question, T("questions.y"), T("questions.n"))
 	fmt.Scanln(&response)
 
-	return strings.ToLower(response) == "y"
+	return strings.ToLower(response) == T("questions.y")
 }
 
 // Ask a question and return the response
