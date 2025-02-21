@@ -18,7 +18,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/fatih/color"
 	"github.com/go-gota/gota/dataframe"
 	"github.com/olekukonko/tablewriter"
 )
@@ -31,7 +30,6 @@ func Help() {
 		help string
 	}
 
-	cmdColor := color.New(color.FgRed).SprintFunc()
 	commands := []command{
 		{"config", "configure url & token of Grist server"},
 		{"delete doc <id>", "delete a document"},
@@ -58,7 +56,10 @@ func Help() {
 
 	fmt.Println("Accepted orders :")
 	for _, command := range commands {
-		fmt.Printf("- %s : %s\n", cmdColor(command.cmd), command.help)
+		fmt.Print("- ")
+		common.PrintCommand(command.cmd)
+		fmt.Print(" : ")
+		fmt.Println(command.help)
 	}
 	os.Exit(0)
 }
@@ -257,12 +258,11 @@ func DisplayDoc(docId string) {
 		}
 
 		// Displaying the document name
-		titleColor := color.New(color.FgRed).SprintFunc()
 		pinned := ""
 		if doc.IsPinned {
 			pinned = "📌"
 		}
-		common.DisplayTitle(fmt.Sprintf("Document %s (%s) %s", titleColor(doc.Name), doc.Id, pinned))
+		common.DisplayTitle(fmt.Sprintf("Document '%s' (%s) %s", doc.Name, doc.Id, pinned))
 
 		// Getting the doc's tables
 		var tables gristapi.Tables = gristapi.GetDocTables(docId)

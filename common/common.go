@@ -9,6 +9,9 @@ import (
 	"fmt"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/mattn/go-colorable"
+	"github.com/muesli/termenv"
 )
 
 // Format string as a title
@@ -48,4 +51,21 @@ func Ask(question string) string {
 	fmt.Scanln(&response)
 
 	return response
+}
+
+// Print an example command line
+func PrintCommand(txt string) {
+	stdout := colorable.NewColorableStdout()
+
+	profile := termenv.ColorProfile()
+
+	if profile != termenv.Ascii {
+		cmdText := termenv.String(txt).
+			Foreground(termenv.ANSIRed).
+			Background(termenv.ANSIWhite).
+			String()
+		fmt.Fprint(stdout, cmdText)
+	} else {
+		fmt.Print(txt)
+	}
 }
