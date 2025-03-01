@@ -263,3 +263,7 @@ Please ensure that your code adheres to the project's coding style and includes 
 This project is licensed under the MIT License - see [LICENCE](LICENCE) for details.
 
 This project includes third-party libraries, which are licensed under their own respective Open Source licenses. SPDX-License-Identifier headers are used to show which license is applicable. The concerning license files can be found in the LICENSES directory.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Ville-Eurometropole-Strasbourg/grist-ctl&type=Date)](https://star-history.com/#Ville-Eurometropole-Strasbourg/grist-ctl&Date)
