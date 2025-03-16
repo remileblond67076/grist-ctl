@@ -127,7 +127,25 @@ GRIST_URL="https://<GRIST server URL, without /api>"
 
 ## Usage
 
-List of commands :
+Command structure :
+
+```
+gristctl [<options>] <command>
+````
+
+Example : 
+
+```
+gristctl -o=json get org
+```
+
+### List of options
+
+| Option | Usage                                        |
+|--------|----------------------------------------------|
+| `-o`| Output type. Can take the values `table` (default), `json` or `csv`. | 
+
+### List of commands
 
 | Command                                       | Usage                                                               |
 | --------------------------------------------- | ------------------------------------------------------------------- |

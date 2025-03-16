@@ -6,18 +6,30 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"os"
-	"strconv"
-
 	"gristctl/gristapi"
 	"gristctl/gristtools"
+	"strconv"
 )
 
 var version = "Undefined"
 
 func main() {
-	args := os.Args[1:]
+	// Define the options
+	optionOutput := flag.String("o", "table", "Output format")
+
+	flag.Parse()
+
+	switch *optionOutput {
+	case "json":
+		gristtools.SetOutput("json")
+	default:
+		gristtools.SetOutput("table")
+	}
+
+	args := flag.Args()
+
 	if len(args) < 1 {
 		gristtools.Help()
 	}
@@ -49,6 +61,7 @@ func main() {
 							}
 						default:
 							gristtools.Help()
+							flag.PrintDefaults()
 						}
 					}
 				case "doc":
@@ -173,6 +186,7 @@ func main() {
 		}
 	default:
 		gristtools.Help()
+		flag.PrintDefaults()
 	}
 
 }
