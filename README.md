@@ -181,6 +181,27 @@ $ gristctl get org
 +----+----------+
 ```
 
+To export as JSON:
+```bash
+$ gristctl -o=json get org
+```
+```json
+[
+   {
+      "id": 3,
+    "name": "ems",
+    "domain": "ems",
+    "createdAt": "2024-11-12T16:50:06.512Z"
+  },
+  {
+     "id": 2,
+    "name": "Personal",
+    "domain": "docs-5",
+    "createdAt": "2024-11-12T16:50:06.494Z"
+  }
+]
+```
+
 ### Displays information about an organization
 
 Example : get organization n°3 information, including the list of his workspaces :
@@ -201,6 +222,37 @@ Contains 30 workspaces :
 +--------------+--------------------------------+-----+--------------+
 ```
 
+To export as JSON:
+
+```bash
+$ gristctl -o=json get org 3
+```
+
+```json
+{
+   "id": 3,
+  "name": "ems",
+  "nbWs": 32,
+  "ws": [
+     {
+        "id": 676,
+      "name": "Cellule Stratégie Logiciels Libres",
+      "nbDoc": 9,
+      "nbUser": 2
+    },
+    ...
+    {
+       "id": 340,
+      "name": "Service-SIG",
+      "nbDoc": 0,
+      "nbUser": 2
+    }
+  ]
+}
+```
+
+
+
 ### Describe a workspace
 
 To fetch data from a Grist workspace with ID 676, including the list of his documents:
@@ -219,6 +271,36 @@ Contains 5 documents :
 +------------------------+------------+--------+
 ```
 
+To export as JSON:
+
+```bash
+$ gristctl -o=json get workspace 676
+```
+
+```json
+{
+   "orgId": 3,
+  "orgName": "ems",
+  "id": 676,
+  "name": "Cellule Stratégie Logiciels Libres",
+  "nbDocs": 9,
+  "docs": [
+     {
+        "id": "wSc4ZgUr28gVPSXwf2JMpa",
+      "name": "Activités SLL",
+      "isPinned": false
+    },
+    ...
+    {
+       "id": "b8RzZzAJ4JgPWN1HKFTb48",
+      "name": "Ressources",
+      "isPinned": true
+    }
+  ]
+}
+```
+
+
 ### View workspace access rights
 
 ```bash
@@ -232,11 +314,46 @@ Accessible to the following users :
 +-----+---------------+-----------------------------+------------------+---------------+
 | ID  |      NOM      |            EMAIL            | INHERITED ACCESS | DIRECT ACCESS |
 +-----+---------------+-----------------------------+------------------+---------------+
-|   5 | xxxx xxxxxxx  | xxxx.xxxxxxx@strasbourg.eu  | owners           |               |
+|   5 | xxxx xxxxxxx  | xxxx.xxxxxxx@strasbourg.eu  | owners           | guests        |
 | 237 | xxxxxxx xxxxx | xxxxxxx.xxxxx@strasbourg.eu | owners           | owners        |
 +-----+---------------+-----------------------------+------------------+---------------+
 2 users
 ```
+
+To export as JSON:
+
+```bash
+$ gristctl -o=json get workspace 676 access
+```
+
+```json
+{
+   "workspaceId": 676,
+   "workspaceName": "Cellule Stratégie Logiciels Libres",
+   "orgId": 3,
+   "orgName": "ems",
+   "nbUsers": 2,
+   "maxInheritedRole": "owners",
+   "users": [
+      {
+         "id": 237,
+         "email": "xxxx.xxxxxx@strasbourg.eu",
+         "name": "Xxxxx XXXXXX",
+         "parentAccess": "owners",
+         "access": "owners"
+      },
+      {
+         "id": 5,
+         "email": "xxxx.xxxxxx@strasbourg.eu",
+         "name": "Xxxxx XXXXXX",
+         "parentAccess": "owners",
+         "access": "guests"
+      }
+   ]
+}
+```
+
+
 
 ### Delete a workspace
 
