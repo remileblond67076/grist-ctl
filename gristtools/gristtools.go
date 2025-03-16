@@ -651,34 +651,81 @@ func DisplayWorkspaceAccess(workspaceId int) {
 
 // Displays users with access to a document
 func DisplayDocAccess(docId string) {
+	type UserAccess struct {
+		UserId       string `json:"userId"`
+		UserEmail    string `json:"userEmail"`
+		ParentAccess string `json:"parentAccess"`
+		Access       string `json:"access"`
+	}
+	type DocAcces struct {
+		DocId            string       `json:"docId"`
+		DocName          string       `json:"docName"`
+		WorkspaceName    string       `json:"workspaceName"`
+		MaxInheritedRole string       `json:"MaxInheritedRole"`
+		UserAccess       []UserAccess `json:"UserAccess"`
+	}
+	var myDocAccess DocAcces
+
 	// Getting the document
 	doc := gristapi.GetDoc(docId)
 	if doc.Name == "" {
 		fmt.Printf("❗️ Document %s not found ❗️\n", docId)
 	} else {
 		// Document was found
-
-		// Displaying the document name
-		title := fmt.Sprintf("Workspace \"%s\" (n°%d), document \"%s\"", doc.Workspace.Name, doc.Workspace.Id, doc.Name)
-		common.DisplayTitle(title)
-
 		// Displaying the access rights
 		docAccess := gristapi.GetDocAccess(docId)
 		// Sorting users by email (lowercase)
 		sort.Slice(docAccess.Users, func(i, j int) bool {
 			return strings.ToLower(docAccess.Users[i].Email) < strings.ToLower(docAccess.Users[j].Email)
 		})
-
-		fmt.Println(TranslateRole(docAccess.MaxInheritedRole))
-		fmt.Printf("\nDirect users:\n")
-		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"Id", "Email", "Nom", "Inherited access", "Direct access"})
+		var tmpUsers []UserAccess
 		for _, user := range docAccess.Users {
 			if user.Access != "" {
-				table.Append([]string{strconv.Itoa(user.Id), user.Email, user.Name, user.ParentAccess, user.Access})
+				userAccess := UserAccess{
+					UserId:       strconv.Itoa(user.Id),
+					UserEmail:    user.Email,
+					ParentAccess: user.ParentAccess,
+					Access:       user.Access,
+				}
+
+				tmpUsers = append(tmpUsers, userAccess)
 			}
+
+			myDocAccess = DocAcces{
+				DocId:            doc.Id,
+				DocName:          doc.Name,
+				WorkspaceName:    doc.Workspace.Name,
+				MaxInheritedRole: TranslateRole(docAccess.MaxInheritedRole),
+				UserAccess:       tmpUsers,
+			}
+
 		}
-		table.Render()
+
+		switch output {
+		case "json":
+			{
+				jsonData, err := json.MarshalIndent(myDocAccess, "", "   ")
+				if err != nil {
+					fmt.Println(err)
+				}
+				fmt.Println(string(jsonData))
+			}
+		case "table":
+			{
+				// Displaying the document name
+				title := fmt.Sprintf("Workspace \"%s\" (n°%d), document \"%s\"", myDocAccess.WorkspaceName, myDocAccess.DocId, myDocAccess.DocName)
+				common.DisplayTitle(title)
+				fmt.Println(myDocAccess.MaxInheritedRole)
+				fmt.Printf("\nDirect users:\n")
+				table := tablewriter.NewWriter(os.Stdout)
+				table.SetHeader([]string{"Id", "Email", "Nom", "Inherited access", "Direct access"})
+				for _, user := range myDocAccess.UserAccess {
+					table.Append([]string{user.UserId, user.UserEmail, user.ParentAccess, user.Access})
+				}
+				table.Render()
+			}
+
+		}
 	}
 
 }
