@@ -7,6 +7,7 @@ package gristtools
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"gristctl/common"
 	"gristctl/gristapi"
@@ -21,6 +22,12 @@ import (
 	"github.com/go-gota/gota/dataframe"
 	"github.com/olekukonko/tablewriter"
 )
+
+var output string
+
+func SetOutput(out string) {
+	output = out
+}
 
 // Display help message and quit
 func Help() {
@@ -224,13 +231,27 @@ func ImportUsers() {
 func DisplayOrgAccess(idOrg string) {
 
 	lstUsers := gristapi.GetOrgAccess(idOrg)
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Email", "Name", "Access"})
-	for _, user := range lstUsers {
-		table.Append([]string{user.Email, user.Name, user.Access})
-	}
 
-	table.Render()
+	switch output {
+	case "table":
+		{
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"Email", "Name", "Access"})
+			for _, user := range lstUsers {
+				table.Append([]string{user.Email, user.Name, user.Access})
+			}
+
+			table.Render()
+		}
+	case "json":
+		{
+			jsonUsers, err := json.MarshalIndent(lstUsers, "", "  ")
+			if err != nil {
+				fmt.Println("ERROR :", err)
+			}
+			fmt.Println(string(jsonUsers))
+		}
+	}
 }
 
 /*
@@ -244,31 +265,36 @@ func DisplayOrgAccess(idOrg string) {
   - List of columns
 */
 func DisplayDoc(docId string) {
+	type TableDetails struct {
+		Name       string
+		Nb_rows    int
+		Nb_cols    int
+		Cols_names []string
+	}
+
+	type DocInfo struct {
+		Id       string         `json:"id"`
+		Name     string         `json:"name"`
+		IsPinned bool           `json:"pined"`
+		NbTables int            `json:"nbTables"`
+		Tables   []TableDetails `json:"tables"`
+	}
+
 	// Getting the document
 	doc := gristapi.GetDoc(docId)
-
 	if doc.Id == "" {
 		fmt.Printf("❗️ Document %s not found ❗️\n", docId)
 	} else {
 		// Document was found
-
-		type TableDetails struct {
-			name       string
-			nb_rows    int
-			nb_cols    int
-			cols_names []string
-		}
-
-		// Displaying the document name
-		pinned := ""
-		if doc.IsPinned {
-			pinned = "📌"
-		}
-		common.DisplayTitle(fmt.Sprintf("Document '%s' (%s) %s", doc.Name, doc.Id, pinned))
-
 		// Getting the doc's tables
 		var tables gristapi.Tables = gristapi.GetDocTables(docId)
-		fmt.Printf("Contains %d tables :\n", len(tables.Tables))
+
+		myDoc := DocInfo{
+			Id:       doc.Id,
+			Name:     doc.Name,
+			IsPinned: doc.IsPinned,
+			NbTables: len(tables.Tables),
+		}
 
 		// Getting the tables details
 		var wg sync.WaitGroup
@@ -290,29 +316,51 @@ func DisplayDoc(docId string) {
 					table_desc += fmt.Sprintf("%s ", col)
 				}
 				table_info := TableDetails{
-					name:       table.Id,
-					nb_rows:    len(rows.Id),
-					nb_cols:    len(columns.Columns),
-					cols_names: cols_names,
+					Name:       table.Id,
+					Nb_rows:    len(rows.Id),
+					Nb_cols:    len(columns.Columns),
+					Cols_names: cols_names,
 				}
 				tables_details = append(tables_details, table_info)
 			}()
 		}
 		wg.Wait()
 
-		// Displaying the tables details
-		tableView := tablewriter.NewWriter(os.Stdout)
-		tableView.SetHeader([]string{"Table", common.T("col.nbCols"), common.T("col.columns"), common.T("col.nbRows")})
-		for _, table_details := range tables_details {
-			for i, col_name := range table_details.cols_names {
-				if i == 0 {
-					tableView.Append([]string{table_details.name, strconv.Itoa(table_details.nb_cols), col_name, strconv.Itoa(table_details.nb_rows)})
-				} else {
-					tableView.Append([]string{"", "", col_name, ""})
+		myDoc.Tables = tables_details
+
+		switch output {
+		case "json":
+			{
+				jsonDoc, err := json.MarshalIndent(myDoc, "", "   ")
+				if err != nil {
+					fmt.Println(err)
 				}
+				fmt.Println(string(jsonDoc))
+			}
+		case "table":
+			{
+				// Displaying the document name
+				pinned := ""
+				if myDoc.IsPinned {
+					pinned = "📌"
+				}
+				common.DisplayTitle(fmt.Sprintf("Document '%s' (%s) %s", myDoc.Name, myDoc.Id, pinned))
+				fmt.Printf("Contains %d tables :\n", myDoc.NbTables)
+				// Displaying the tables details
+				tableView := tablewriter.NewWriter(os.Stdout)
+				tableView.SetHeader([]string{"Table", common.T("col.nbCols"), common.T("col.columns"), common.T("col.nbRows")})
+				for _, table_details := range tables_details {
+					for i, col_name := range table_details.Cols_names {
+						if i == 0 {
+							tableView.Append([]string{table_details.Name, strconv.Itoa(table_details.Nb_cols), col_name, strconv.Itoa(table_details.Nb_rows)})
+						} else {
+							tableView.Append([]string{"", "", col_name, ""})
+						}
+					}
+				}
+				tableView.Render()
 			}
 		}
-		tableView.Render()
 	}
 
 }
@@ -327,36 +375,53 @@ func DisplayOrgs() {
 		return strings.ToLower(lstOrgs[i].Name) < strings.ToLower(lstOrgs[j].Name)
 	})
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{common.T("col.ident"), common.T("col.name")})
-	for _, org := range lstOrgs {
-		table.Append([]string{strconv.Itoa(org.Id), org.Name})
+
+	switch output {
+	case "table":
+		{
+			table.SetHeader([]string{common.T("col.ident"), common.T("col.name")})
+			for _, org := range lstOrgs {
+				table.Append([]string{strconv.Itoa(org.Id), org.Name})
+			}
+			table.Render()
+		}
+	case "json":
+		{
+			jsonOrgs, err := json.MarshalIndent(lstOrgs, "", "  ")
+			if err != nil {
+				fmt.Println("ERROR :", err)
+			}
+			fmt.Println(string(jsonOrgs))
+		}
 	}
-	table.Render()
 }
 
 // Displays details about an organization
 func DisplayOrg(orgId string) {
 
-	type wpDesc struct {
-		id     int
-		name   string
-		nbDoc  int
-		nbUser int
+	type WpDesc struct {
+		Id     int    `json:"id"`
+		Name   string `json:"name"`
+		NbDoc  int    `json:"nbDoc"`
+		NbUser int    `json:"nbUser"`
 	}
-	var lstWsDesc []wpDesc
+
+	type OrgDesc struct {
+		Id   int      `json:"id"`
+		Name string   `json:"name"`
+		NbWs int      `json:"nbWs"`
+		Ws   []WpDesc `json:"ws"`
+	}
+
+	var lstWsDesc []WpDesc
 
 	org := gristapi.GetOrg(orgId)
 	if org.Id == 0 {
 		fmt.Printf("❗️ Organization %s not found ❗️\n", orgId)
 	} else {
+
 		// Org was found
 		worskspaces := gristapi.GetOrgWorkspaces(org.Id)
-		common.DisplayTitle(fmt.Sprintf("%s n°%d : %s", common.T("org.name"), org.Id, org.Name))
-		// fmt.Printf("Contains %d workspaces :\n", len(worskspaces))
-		fmt.Printf("%s %d:\n", common.T("org.contains"), len(worskspaces))
-
-		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{common.T("col.ident"), common.T("col.name"), common.T("col.nbDocs"), common.T("col.directUsers")})
 		var wg sync.WaitGroup
 		// Retrieving the number of documents and users for each workspace
 		for _, ws := range worskspaces {
@@ -370,25 +435,64 @@ func DisplayOrg(orgId string) {
 						nbUsers += 1
 					}
 				}
-				lstWsDesc = append(lstWsDesc, wpDesc{ws.Id, ws.Name, len(ws.Docs), nbUsers})
+				lstWsDesc = append(lstWsDesc, WpDesc{ws.Id, ws.Name, len(ws.Docs), nbUsers})
 			}()
 		}
 		wg.Wait()
 		// Sorting the list of workspaces by name
 		sort.Slice(lstWsDesc, func(i, j int) bool {
-			return lstWsDesc[i].name < lstWsDesc[j].name
+			return lstWsDesc[i].Name < lstWsDesc[j].Name
 		})
+		switch output {
+		case "table":
+			{
+				common.DisplayTitle(fmt.Sprintf("%s n°%d : %s", common.T("org.name"), org.Id, org.Name))
+				fmt.Printf("%s %d:\n", common.T("org.contains"), len(worskspaces))
+				table := tablewriter.NewWriter(os.Stdout)
+				table.SetHeader([]string{common.T("col.ident"), common.T("col.name"), common.T("col.nbDocs"), common.T("col.directUsers")})
+				// Displaying the list of workspaces
+				for _, desc := range lstWsDesc {
+					table.Append([]string{strconv.Itoa(desc.Id), desc.Name, strconv.Itoa(desc.NbDoc), strconv.Itoa(desc.NbUser)})
+				}
+				table.Render()
+			}
+		case "json":
+			{
+				myOrg := OrgDesc{
+					Id:   org.Id,
+					Name: org.Name,
+					NbWs: len(worskspaces),
+					Ws:   lstWsDesc,
+				}
 
-		// Displaying the list of workspaces
-		for _, desc := range lstWsDesc {
-			table.Append([]string{strconv.Itoa(desc.id), desc.name, strconv.Itoa(desc.nbDoc), strconv.Itoa(desc.nbUser)})
+				jsonData, err := json.MarshalIndent(myOrg, "", "  ")
+				if err != nil {
+					fmt.Println(err)
+				}
+				fmt.Println(string(jsonData))
+			}
 		}
-		table.Render()
+
 	}
 }
 
 // Display a Workspace
 func DisplayWorkspace(workspaceId int) {
+
+	type docDesc struct {
+		Id       string `json:"id"`
+		Name     string `json:"name"`
+		IsPinned bool   `json:"isPinned"`
+	}
+
+	type WorkspaceDesc struct {
+		OrgId   int       `json:"orgId"`
+		OrgName string    `json:"orgName"`
+		Id      int       `json:"id"`
+		Name    string    `json:"name"`
+		NbDocs  int       `json:"nbDocs"`
+		Docs    []docDesc `json:"docs"`
+	}
 
 	// Getting the workspace
 	ws := gristapi.GetWorkspace(workspaceId)
@@ -396,110 +500,232 @@ func DisplayWorkspace(workspaceId int) {
 		fmt.Printf("❗️ Workspace %d not found ❗️\n", workspaceId)
 	} else {
 		// Workspace was found
-		common.DisplayTitle(fmt.Sprintf("%s n°%d : '%s' | %s n°%d : '%s'",
-			common.T("org.name"),
-			ws.Org.Id,
-			ws.Org.Name,
-			common.T("workspace.name"),
-			ws.Id,
-			ws.Name))
+
+		myDocs := []docDesc{}
+		for _, doc := range ws.Docs {
+			myDocs = append(myDocs, docDesc{doc.Id, doc.Name, doc.IsPinned})
+		}
 
 		// Sort the documents by name (lowercase)
-		sort.Slice(ws.Docs, func(i, j int) bool {
-			return strings.ToLower(ws.Docs[i].Name) < strings.ToLower(ws.Docs[j].Name)
+		sort.Slice(myDocs, func(i, j int) bool {
+			return strings.ToLower(myDocs[i].Name) < strings.ToLower(myDocs[j].Name)
 		})
 
-		// Listing the documents
-		if len(ws.Docs) > 0 {
-			fmt.Printf("Contains %d documents :\n", len(ws.Docs))
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{common.T("col.ident"), common.T("col.name"), common.T("col.pinned")})
-			for _, doc := range ws.Docs {
-				pin := ""
-				if doc.IsPinned {
-					pin = "📌"
+		myWS := WorkspaceDesc{
+			OrgId:   ws.Org.Id,
+			OrgName: ws.Org.Name,
+			Id:      ws.Id,
+			Name:    ws.Name,
+			NbDocs:  len(ws.Docs),
+			Docs:    myDocs,
+		}
+
+		switch output {
+		case "table":
+			{
+				common.DisplayTitle(fmt.Sprintf("%s n°%d : '%s' | %s n°%d : '%s'",
+					common.T("org.name"),
+					myWS.OrgId,
+					myWS.OrgName,
+					common.T("workspace.name"),
+					myWS.Id,
+					myWS.Name))
+				fmt.Printf("Contains %d documents :\n", myWS.NbDocs)
+				// Listing the documents
+				if myWS.NbDocs > 0 {
+					table := tablewriter.NewWriter(os.Stdout)
+					table.SetHeader([]string{common.T("col.ident"), common.T("col.name"), common.T("col.pinned")})
+					for _, doc := range myWS.Docs {
+						pin := ""
+						if doc.IsPinned {
+							pin = "📌"
+						}
+						table.Append([]string{doc.Id, doc.Name, pin})
+					}
+					table.Render()
+				} else {
+					fmt.Println("No documents")
 				}
-				table.Append([]string{doc.Id, doc.Name, pin})
 			}
-			table.Render()
-		} else {
-			fmt.Println("No documents")
+		case "json":
+			{
+				jsonData, err := json.MarshalIndent(myWS, "", "  ")
+				if err != nil {
+					fmt.Println(err)
+				}
+				fmt.Println(string(jsonData))
+			}
 		}
 	}
 }
 
 // Displays workspace access rights
 func DisplayWorkspaceAccess(workspaceId int) {
+	type wsUser struct {
+		Id           int    `json:"id"`
+		Email        string `json:"email"`
+		Name         string `json:"name"`
+		ParentAccess string `json:"parentAccess"`
+		Access       string `json:"access"`
+	}
+
+	type wsAccess struct {
+		WokspaceId       int      `json:"workspaceId"`
+		WorkspaceName    string   `json:"workspaceName"`
+		OrgId            int      `json:"orgId"`
+		OrgName          string   `json:"orgName"`
+		NbUsers          int      `json:"nbUsers"`
+		MaxInheritedRole string   `json:"maxInheritedRole"`
+		Users            []wsUser `json:"users"`
+	}
+
 	// Getting the workspace
 	ws := gristapi.GetWorkspace((workspaceId))
 	if ws.Id == 0 {
 		fmt.Printf("❗️ Workspace %d not found ❗️\n", workspaceId)
 	} else {
 		// Workspace was found
-
-		// Displaying the workspace name
-		common.DisplayTitle(fmt.Sprintf("Workspace n°%d : %s", ws.Id, ws.Name))
-
-		// Displaying the access rights
 		wsa := gristapi.GetWorkspaceAccess(workspaceId)
 
-		// Displaying the MaxInheritedRole
-		fmt.Println(TranslateRole(wsa.MaxInheritedRole))
-
+		var myUsers []wsUser
+		nbUsers := 0
+		for _, user := range wsa.Users {
+			if user.Access != "" || user.ParentAccess != "" {
+				tmpUser := wsUser{
+					Id:           user.Id,
+					Email:        user.Email,
+					Name:         user.Name,
+					ParentAccess: user.ParentAccess,
+					Access:       user.Access,
+				}
+				myUsers = append(myUsers, tmpUser)
+				nbUsers++
+			}
+		}
 		// Sort users by email (lowercase)
-		sort.Slice(wsa.Users, func(i, j int) bool {
-			return strings.ToLower(wsa.Users[i].Email) < strings.ToLower(wsa.Users[j].Email)
+		sort.Slice(myUsers, func(i, j int) bool {
+			return strings.ToLower(myUsers[i].Email) < strings.ToLower(myUsers[j].Email)
 		})
-		nbUsers := len(wsa.Users)
-		if nbUsers <= 0 {
-			fmt.Println("Accessible to no user")
-		} else {
-			nbUser := 0
-			fmt.Println("\nAccessible to the following users :")
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"Id", "Nom", "Email", "Inherited access", "Direct access"})
-			for _, user := range wsa.Users {
-				if user.Access != "" || user.ParentAccess != "" {
-					table.Append([]string{strconv.Itoa(user.Id), user.Name, user.Email, user.ParentAccess, user.Access})
-					nbUser += 1
+		myWsAccess := wsAccess{
+			WokspaceId:       ws.Id,
+			WorkspaceName:    ws.Name,
+			OrgId:            ws.Org.Id,
+			OrgName:          ws.Org.Name,
+			MaxInheritedRole: wsa.MaxInheritedRole,
+			NbUsers:          nbUsers,
+			Users:            myUsers,
+		}
+
+		switch output {
+		case "table":
+			{
+				// Displaying the workspace name
+				common.DisplayTitle(fmt.Sprintf("Workspace n°%d : %s", myWsAccess.WokspaceId, myWsAccess.WorkspaceName))
+
+				// Displaying the MaxInheritedRole
+				fmt.Println(TranslateRole(myWsAccess.MaxInheritedRole))
+
+				if myWsAccess.NbUsers <= 0 {
+					fmt.Println("Accessible to no user")
+				} else {
+					fmt.Printf("\nAccessible to %d users :\n", myWsAccess.NbUsers)
+					table := tablewriter.NewWriter(os.Stdout)
+					table.SetHeader([]string{"Id", "Nom", "Email", "Inherited access", "Direct access"})
+					for _, user := range myWsAccess.Users {
+						table.Append([]string{strconv.Itoa(user.Id), user.Name, user.Email, user.ParentAccess, user.Access})
+					}
+					table.Render()
 				}
 			}
-			table.Render()
-			fmt.Printf("%d users\n", nbUser)
+		case "json":
+			{
+				jsonAccess, err := json.MarshalIndent(myWsAccess, "", "   ")
+				if err != nil {
+					fmt.Println(err)
+				}
+				fmt.Println(string(jsonAccess))
+			}
 		}
 	}
 }
 
 // Displays users with access to a document
 func DisplayDocAccess(docId string) {
+	type UserAccess struct {
+		UserId       string `json:"userId"`
+		UserEmail    string `json:"userEmail"`
+		ParentAccess string `json:"parentAccess"`
+		Access       string `json:"access"`
+	}
+	type DocAcces struct {
+		DocId            string       `json:"docId"`
+		DocName          string       `json:"docName"`
+		WorkspaceName    string       `json:"workspaceName"`
+		MaxInheritedRole string       `json:"MaxInheritedRole"`
+		UserAccess       []UserAccess `json:"UserAccess"`
+	}
+	var myDocAccess DocAcces
+
 	// Getting the document
 	doc := gristapi.GetDoc(docId)
 	if doc.Name == "" {
 		fmt.Printf("❗️ Document %s not found ❗️\n", docId)
 	} else {
 		// Document was found
-
-		// Displaying the document name
-		title := fmt.Sprintf("Workspace \"%s\" (n°%d), document \"%s\"", doc.Workspace.Name, doc.Workspace.Id, doc.Name)
-		common.DisplayTitle(title)
-
 		// Displaying the access rights
 		docAccess := gristapi.GetDocAccess(docId)
 		// Sorting users by email (lowercase)
 		sort.Slice(docAccess.Users, func(i, j int) bool {
 			return strings.ToLower(docAccess.Users[i].Email) < strings.ToLower(docAccess.Users[j].Email)
 		})
-
-		fmt.Println(TranslateRole(docAccess.MaxInheritedRole))
-		fmt.Printf("\nDirect users:\n")
-		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"Id", "Email", "Nom", "Inherited access", "Direct access"})
+		var tmpUsers []UserAccess
 		for _, user := range docAccess.Users {
 			if user.Access != "" {
-				table.Append([]string{strconv.Itoa(user.Id), user.Email, user.Name, user.ParentAccess, user.Access})
+				userAccess := UserAccess{
+					UserId:       strconv.Itoa(user.Id),
+					UserEmail:    user.Email,
+					ParentAccess: user.ParentAccess,
+					Access:       user.Access,
+				}
+
+				tmpUsers = append(tmpUsers, userAccess)
 			}
+
+			myDocAccess = DocAcces{
+				DocId:            doc.Id,
+				DocName:          doc.Name,
+				WorkspaceName:    doc.Workspace.Name,
+				MaxInheritedRole: TranslateRole(docAccess.MaxInheritedRole),
+				UserAccess:       tmpUsers,
+			}
+
 		}
-		table.Render()
+
+		switch output {
+		case "json":
+			{
+				jsonData, err := json.MarshalIndent(myDocAccess, "", "   ")
+				if err != nil {
+					fmt.Println(err)
+				}
+				fmt.Println(string(jsonData))
+			}
+		case "table":
+			{
+				// Displaying the document name
+				title := fmt.Sprintf("Workspace \"%s\" (n°%d), document \"%s\"", myDocAccess.WorkspaceName, myDocAccess.DocId, myDocAccess.DocName)
+				common.DisplayTitle(title)
+				fmt.Println(myDocAccess.MaxInheritedRole)
+				fmt.Printf("\nDirect users:\n")
+				table := tablewriter.NewWriter(os.Stdout)
+				table.SetHeader([]string{"Id", "Email", "Nom", "Inherited access", "Direct access"})
+				for _, user := range myDocAccess.UserAccess {
+					table.Append([]string{user.UserId, user.UserEmail, user.ParentAccess, user.Access})
+				}
+				table.Render()
+			}
+
+		}
 	}
 
 }

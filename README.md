@@ -127,7 +127,25 @@ GRIST_URL="https://<GRIST server URL, without /api>"
 
 ## Usage
 
-List of commands :
+Command structure :
+
+```
+gristctl [<options>] <command>
+````
+
+Example : 
+
+```
+gristctl -o=json get org
+```
+
+### List of options
+
+| Option | Usage                                                                |
+| ------ | -------------------------------------------------------------------- |
+| `-o`   | Output type. Can take the values `table` (default), `json` or `csv`. |
+
+### List of commands
 
 | Command                                       | Usage                                                               |
 | --------------------------------------------- | ------------------------------------------------------------------- |
@@ -135,16 +153,16 @@ List of commands :
 | `delete doc <id>`                             | delete a document                                                   |
 | `delete user <id>`                            | delete a user                                                       |
 | `delete workspace <id>`                       | delete a workspace                                                  |
-| `get doc <id>`                                | document details                                                    |
-| `get doc <id> access`                         | list of document access rights                                      |
+| `get [-o=json/table] doc <id>`                | document details                                                    |
+| `get [-o=json/table] doc <id> access`         | list of document access rights                                      |
 | `get doc <id> excel`                          | export document as `<workspace name>_<doc name>.xlsx` Excel file    |
 | `get doc <id> grist`                          | export document as `<workspace name>_<doc name>.grist` Grist file   |
 | `get doc <id> table <tableName>`              | export content of a document's table as a CSV file (xlsx) in stdout |
-| `get org <id>`                                | organization details                                                |
-| `get org`                                     | organization list                                                   |
-| `get users`                                   | displays all user rights                                            |
-| `get workspace <id> access`                   | list of workspace access rights                                     |
-| `get workspace <id>`                          | workspace details                                                   |
+| `get [-o=json/table] org <id>`                | organization details                                                |
+| `get [-o=json/table] org`                     | organization list                                                   |
+| `get [-o=json/table] users`                   | displays all user rights                                            |
+| `get [-o=json/table] workspace <id> access`   | list of workspace access rights                                     |
+| `get [-o=json/table] workspace <id>`          | workspace details                                                   |
 | `import users`                                | imports users from standard input                                   |
 | `purge doc <id> [<number of states to keep>]` | purges document history (retains last 3 operations by default)      |
 | `version`                                     | displays the version of the program                                 |
@@ -161,6 +179,27 @@ $ gristctl get org
 |  2 | Personal |
 |  3 | ems      |
 +----+----------+
+```
+
+To export as JSON:
+```bash
+$ gristctl -o=json get org
+```
+```json
+[
+   {
+      "id": 3,
+    "name": "ems",
+    "domain": "ems",
+    "createdAt": "2024-11-12T16:50:06.512Z"
+  },
+  {
+     "id": 2,
+    "name": "Personal",
+    "domain": "docs-5",
+    "createdAt": "2024-11-12T16:50:06.494Z"
+  }
+]
 ```
 
 ### Displays information about an organization
@@ -183,6 +222,37 @@ Contains 30 workspaces :
 +--------------+--------------------------------+-----+--------------+
 ```
 
+To export as JSON:
+
+```bash
+$ gristctl -o=json get org 3
+```
+
+```json
+{
+   "id": 3,
+  "name": "ems",
+  "nbWs": 32,
+  "ws": [
+     {
+        "id": 676,
+      "name": "Cellule Stratégie Logiciels Libres",
+      "nbDoc": 9,
+      "nbUser": 2
+    },
+    ...
+    {
+       "id": 340,
+      "name": "Service-SIG",
+      "nbDoc": 0,
+      "nbUser": 2
+    }
+  ]
+}
+```
+
+
+
 ### Describe a workspace
 
 To fetch data from a Grist workspace with ID 676, including the list of his documents:
@@ -201,6 +271,36 @@ Contains 5 documents :
 +------------------------+------------+--------+
 ```
 
+To export as JSON:
+
+```bash
+$ gristctl -o=json get workspace 676
+```
+
+```json
+{
+   "orgId": 3,
+  "orgName": "ems",
+  "id": 676,
+  "name": "Cellule Stratégie Logiciels Libres",
+  "nbDocs": 9,
+  "docs": [
+     {
+        "id": "wSc4ZgUr28gVPSXwf2JMpa",
+      "name": "Activités SLL",
+      "isPinned": false
+    },
+    ...
+    {
+       "id": "b8RzZzAJ4JgPWN1HKFTb48",
+      "name": "Ressources",
+      "isPinned": true
+    }
+  ]
+}
+```
+
+
 ### View workspace access rights
 
 ```bash
@@ -214,11 +314,46 @@ Accessible to the following users :
 +-----+---------------+-----------------------------+------------------+---------------+
 | ID  |      NOM      |            EMAIL            | INHERITED ACCESS | DIRECT ACCESS |
 +-----+---------------+-----------------------------+------------------+---------------+
-|   5 | xxxx xxxxxxx  | xxxx.xxxxxxx@strasbourg.eu  | owners           |               |
+|   5 | xxxx xxxxxxx  | xxxx.xxxxxxx@strasbourg.eu  | owners           | guests        |
 | 237 | xxxxxxx xxxxx | xxxxxxx.xxxxx@strasbourg.eu | owners           | owners        |
 +-----+---------------+-----------------------------+------------------+---------------+
 2 users
 ```
+
+To export as JSON:
+
+```bash
+$ gristctl -o=json get workspace 676 access
+```
+
+```json
+{
+   "workspaceId": 676,
+   "workspaceName": "Cellule Stratégie Logiciels Libres",
+   "orgId": 3,
+   "orgName": "ems",
+   "nbUsers": 2,
+   "maxInheritedRole": "owners",
+   "users": [
+      {
+         "id": 237,
+         "email": "xxxx.xxxxxx@strasbourg.eu",
+         "name": "Xxxxx XXXXXX",
+         "parentAccess": "owners",
+         "access": "owners"
+      },
+      {
+         "id": 5,
+         "email": "xxxx.xxxxxx@strasbourg.eu",
+         "name": "Xxxxx XXXXXX",
+         "parentAccess": "owners",
+         "access": "guests"
+      }
+   ]
+}
+```
+
+
 
 ### Delete a workspace
 
