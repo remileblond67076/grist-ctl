@@ -5,6 +5,7 @@
 module gristctl
 
 go 1.23.3
+toolchain go1.24.1
 
 require (
 	github.com/Xuanwo/go-locale v1.1.3
