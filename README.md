@@ -141,9 +141,9 @@ gristctl -o=json get org
 
 ### List of options
 
-| Option | Usage                                        |
-|--------|----------------------------------------------|
-| `-o`| Output type. Can take the values `table` (default), `json` or `csv`. | 
+| Option | Usage                                                                |
+| ------ | -------------------------------------------------------------------- |
+| `-o`   | Output type. Can take the values `table` (default), `json` or `csv`. |
 
 ### List of commands
 
@@ -153,16 +153,16 @@ gristctl -o=json get org
 | `delete doc <id>`                             | delete a document                                                   |
 | `delete user <id>`                            | delete a user                                                       |
 | `delete workspace <id>`                       | delete a workspace                                                  |
-| `get doc <id>`                                | document details                                                    |
-| `get doc <id> access`                         | list of document access rights                                      |
+| `get [-o=json/table] doc <id>`                | document details                                                    |
+| `get [-o=json/table] doc <id> access`         | list of document access rights                                      |
 | `get doc <id> excel`                          | export document as `<workspace name>_<doc name>.xlsx` Excel file    |
 | `get doc <id> grist`                          | export document as `<workspace name>_<doc name>.grist` Grist file   |
 | `get doc <id> table <tableName>`              | export content of a document's table as a CSV file (xlsx) in stdout |
-| `get org <id>`                                | organization details                                                |
-| `get org`                                     | organization list                                                   |
-| `get users`                                   | displays all user rights                                            |
-| `get workspace <id> access`                   | list of workspace access rights                                     |
-| `get workspace <id>`                          | workspace details                                                   |
+| `get [-o=json/table] org <id>`                | organization details                                                |
+| `get [-o=json/table] org`                     | organization list                                                   |
+| `get [-o=json/table] users`                   | displays all user rights                                            |
+| `get [-o=json/table] workspace <id> access`   | list of workspace access rights                                     |
+| `get [-o=json/table] workspace <id>`          | workspace details                                                   |
 | `import users`                                | imports users from standard input                                   |
 | `purge doc <id> [<number of states to keep>]` | purges document history (retains last 3 operations by default)      |
 | `version`                                     | displays the version of the program                                 |
