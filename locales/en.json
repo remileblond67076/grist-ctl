@@ -39,7 +39,7 @@
         "orgDesc": "organization description",
         "orgList": "list of organizations",
         "userImport": "import users from stdin",
-        "userList": "list of users with thier roles",
+        "userList": "list of users with their roles",
         "version": "displays the version of the program",
         "workspaceAccess": "list of users with access to the workspace",
         "workspaceDesc": "workspace description"
