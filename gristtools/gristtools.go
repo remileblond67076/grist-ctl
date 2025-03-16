@@ -265,31 +265,36 @@ func DisplayOrgAccess(idOrg string) {
   - List of columns
 */
 func DisplayDoc(docId string) {
+	type TableDetails struct {
+		Name       string
+		Nb_rows    int
+		Nb_cols    int
+		Cols_names []string
+	}
+
+	type DocInfo struct {
+		Id       string         `json:"id"`
+		Name     string         `json:"name"`
+		IsPinned bool           `json:"pined"`
+		NbTables int            `json:"nbTables"`
+		Tables   []TableDetails `json:"tables"`
+	}
+
 	// Getting the document
 	doc := gristapi.GetDoc(docId)
-
 	if doc.Id == "" {
 		fmt.Printf("❗️ Document %s not found ❗️\n", docId)
 	} else {
 		// Document was found
-
-		type TableDetails struct {
-			Name       string
-			Nb_rows    int
-			Nb_cols    int
-			Cols_names []string
-		}
-
-		// Displaying the document name
-		pinned := ""
-		if doc.IsPinned {
-			pinned = "📌"
-		}
-		common.DisplayTitle(fmt.Sprintf("Document '%s' (%s) %s", doc.Name, doc.Id, pinned))
-
 		// Getting the doc's tables
 		var tables gristapi.Tables = gristapi.GetDocTables(docId)
-		fmt.Printf("Contains %d tables :\n", len(tables.Tables))
+
+		myDoc := DocInfo{
+			Id:       doc.Id,
+			Name:     doc.Name,
+			IsPinned: doc.IsPinned,
+			NbTables: len(tables.Tables),
+		}
 
 		// Getting the tables details
 		var wg sync.WaitGroup
@@ -321,19 +326,41 @@ func DisplayDoc(docId string) {
 		}
 		wg.Wait()
 
-		// Displaying the tables details
-		tableView := tablewriter.NewWriter(os.Stdout)
-		tableView.SetHeader([]string{"Table", common.T("col.nbCols"), common.T("col.columns"), common.T("col.nbRows")})
-		for _, table_details := range tables_details {
-			for i, col_name := range table_details.Cols_names {
-				if i == 0 {
-					tableView.Append([]string{table_details.Name, strconv.Itoa(table_details.Nb_cols), col_name, strconv.Itoa(table_details.Nb_rows)})
-				} else {
-					tableView.Append([]string{"", "", col_name, ""})
+		myDoc.Tables = tables_details
+
+		switch output {
+		case "json":
+			{
+				jsonDoc, err := json.MarshalIndent(myDoc, "", "   ")
+				if err != nil {
+					fmt.Println(err)
 				}
+				fmt.Println(string(jsonDoc))
+			}
+		case "table":
+			{
+				// Displaying the document name
+				pinned := ""
+				if myDoc.IsPinned {
+					pinned = "📌"
+				}
+				common.DisplayTitle(fmt.Sprintf("Document '%s' (%s) %s", myDoc.Name, myDoc.Id, pinned))
+				fmt.Printf("Contains %d tables :\n", myDoc.NbTables)
+				// Displaying the tables details
+				tableView := tablewriter.NewWriter(os.Stdout)
+				tableView.SetHeader([]string{"Table", common.T("col.nbCols"), common.T("col.columns"), common.T("col.nbRows")})
+				for _, table_details := range tables_details {
+					for i, col_name := range table_details.Cols_names {
+						if i == 0 {
+							tableView.Append([]string{table_details.Name, strconv.Itoa(table_details.Nb_cols), col_name, strconv.Itoa(table_details.Nb_rows)})
+						} else {
+							tableView.Append([]string{"", "", col_name, ""})
+						}
+					}
+				}
+				tableView.Render()
 			}
 		}
-		tableView.Render()
 	}
 
 }
