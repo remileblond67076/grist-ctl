@@ -40,6 +40,7 @@ func Help() {
 
 	commands := []command{
 		{"config", common.T("help.config")},
+		{"console", common.T("help.console")},
 		{"delete doc <id>", common.T("help.deleteDoc")},
 		{"delete user <id>", common.T("help.deleteUser")},
 		{"delete workspace <id>", common.T("help.deleteWorkspace")},

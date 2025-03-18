@@ -15,6 +15,8 @@ SPDX-License-Identifier: MIT
 
 **gristctl** is a command-line utility designed for interacting with Grist. It allows users to automate and manage tasks related to Grist documents, including creating, updating, listing, deleting documents, and retrieving data from them.
 
+A Web console is also available to operate commons routine operations.
+
 <div align="center">
     
 [Installation](#installation) • 
@@ -150,6 +152,7 @@ gristctl -o=json get org
 | Command                                       | Usage                                                               |
 | --------------------------------------------- | ------------------------------------------------------------------- |
 | `config`                                      | configure url & token of Grist server                               |
+| `console`                                     | start web console server localy (http://localhost:9090)             |
 | `delete doc <id>`                             | delete a document                                                   |
 | `delete user <id>`                            | delete a user                                                       |
 | `delete workspace <id>`                       | delete a workspace                                                  |

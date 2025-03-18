@@ -8,6 +8,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"gristctl/common"
 	"gristctl/gristapi"
 	"gristctl/gristtools"
 	"strconv"
@@ -37,6 +38,11 @@ func main() {
 	switch arg1 := args[0]; arg1 {
 	case "config":
 		gristtools.Config()
+	case "console":
+		{
+			common.DisplayTitle(common.T("help.console"))
+			common.OpenBrowser("http://localhost:9090")
+		}
 	case "version":
 		gristtools.Version(version)
 	case "get":

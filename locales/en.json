@@ -27,6 +27,7 @@
     "help": {
         "accepted": "Accepted orders",
         "config": "configure url & token of Grist server",
+        "console": "start web console server localy (http://localhost:9090)",
         "deleteDoc": "delete a document",
         "deleteUser": "delete a user",
         "deleteWorkspace": "delete a workspace",

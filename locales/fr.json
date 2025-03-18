@@ -28,6 +28,7 @@
     "help": {
         "accepted": "Commandes acceptées",
         "config": "configurer l'url et le token du serveur Grist",
+        "console": "lancer la console d'administration web (http://localhost:9090)",
         "deleteDoc": "supprimer un document",
         "deleteUser": "supprimer un utilisateur",
         "deleteWorkspace": "supprimer un espace de travail",
