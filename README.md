@@ -401,4 +401,4 @@ This project includes third-party libraries, which are licensed under their own 
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Ville-Eurometropole-Strasbourg/grist-ctl&type=Date)](https://star-history.com/#Ville-Eurometropole-Strasbourg/grist-ctl&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=Ville-Eurometropole-Strasbourg/grist-ctl&type=Date)](https://www.star-history.com/#Ville-Eurometropole-Strasbourg/grist-ctl&Date)
