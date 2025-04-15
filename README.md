@@ -160,7 +160,7 @@ gristctl -o=json get org
 | `get doc <id> table <tableName>`              | export content of a document's table as a CSV file (xlsx) in stdout |
 | `[-o=json/table] get org <id>`                | organization details                                                |
 | `[-o=json/table] get org`                     | organization list                                                   |
-| `get users`                   | displays all user rights                                            |
+| `[-o=json/table] get users`                   | displays all user rights                                            |
 | `[-o=json/table] get workspace <id> access`   | list of workspace access rights                                     |
 | `[-o=json/table] get workspace <id>`          | workspace details                                                   |
 | `import users`                                | imports users from standard input                                   |

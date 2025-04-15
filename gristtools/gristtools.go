@@ -50,7 +50,7 @@ func Help() {
 		{"[-o=json/table] get doc <id>", common.T("help.docDesc")},
 		{"[-o=json/table] get org <id>", common.T("help.orgDesc")},
 		{"[-o=json/table] get org", common.T("help.orgList")},
-		{"get users", common.T("help.userList")},
+		{"[-o=json/table] get users", common.T("help.userList")},
 		{"[-o=json/table] get workspace <id> access", common.T("help.workspaceAccess")},
 		{"[-o=json/table] get workspace <id>", common.T("help.workspaceDesc")},
 		{"import users", common.T("help.userImport")},
