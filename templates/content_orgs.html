@@ -1,0 +1,22 @@
+{{define "content_orgs"}}
+<table>
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Domain</th>
+            <th>Created at</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range .Orgs}}
+        <tr>
+            <td>{{.Id}}</td>
+            <td>{{.Name}}</td>
+            <td>{{.Domain}}</td>
+            <td>{{.CreatedAt}}</td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
+{{end}}

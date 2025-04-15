@@ -41,6 +41,7 @@ func main() {
 	case "console":
 		{
 			common.DisplayTitle(common.T("help.console"))
+			gristtools.StartWebServer()
 			common.OpenBrowser("http://localhost:9090")
 		}
 	case "version":

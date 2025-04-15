@@ -101,6 +101,7 @@ func PrintCommand(txt string) {
 	}
 }
 
+// Open a browser Window on an URL
 func OpenBrowser(url string) {
 	var err error
 

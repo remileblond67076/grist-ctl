@@ -1,0 +1,36 @@
+h1 {
+    color: red;
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+}
+
+body {
+    background-color: lightgray;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background-image: url('/static/img/gristcli-logo.png');
+    background-position: left;
+    background-repeat: no-repeat;
+    background-color: white;
+    padding: 1em;
+    text-align: left;
+    background-size: 100px;
+    padding-left: 110px;
+}
+
+footer {
+    background-color: white;
+    padding: 0;
+    text-align: center;
+    margin: 0;
+}
+
+main {
+    margin: 0;
+    padding: 1em;
+}
