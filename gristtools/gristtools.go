@@ -472,7 +472,6 @@ func DisplayOrg(orgId string) {
 				fmt.Println(string(jsonData))
 			}
 		}
-
 	}
 }
 
@@ -724,10 +723,8 @@ func DisplayDocAccess(docId string) {
 				}
 				table.Render()
 			}
-
 		}
 	}
-
 }
 
 // Displaying the rights matrix
@@ -774,18 +771,32 @@ func DisplayUserMatrix() {
 			}
 		}
 	}
-	accessDf := dataframe.LoadStructs(lstUserAccess)
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Id", "Email", "Name", "Org Id", "Org name", "Wokspace id", "Workspace name", "ParentAccess", "DirectAccess", "Access"})
-	for email, access := range accessDf.Arrange(dataframe.Sort("Email")).GroupBy("Email").GetGroups() {
-		for id, val := range access.Records() {
-			if id > 0 {
-				line := []string{val[3], email, val[4], val[5], val[6], val[8], val[9], val[7], val[1], val[0]}
-				table.Append(line)
+
+	switch output {
+	case "json":
+		{
+			jsonData, err := json.MarshalIndent(lstUserAccess, "", "   ")
+			if err != nil {
+				fmt.Println(err)
 			}
+			fmt.Println(string(jsonData))
+		}
+	case "table":
+		{
+			accessDf := dataframe.LoadStructs(lstUserAccess)
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"Id", "Email", "Name", "Org Id", "Org name", "Wokspace id", "Workspace name", "ParentAccess", "DirectAccess", "Access"})
+			for email, access := range accessDf.Arrange(dataframe.Sort("Email")).GroupBy("Email").GetGroups() {
+				for id, val := range access.Records() {
+					if id > 0 {
+						line := []string{val[3], email, val[4], val[5], val[6], val[8], val[9], val[7], val[1], val[0]}
+						table.Append(line)
+					}
+				}
+			}
+			table.Render()
 		}
 	}
-	table.Render()
 }
 
 // Delete a workspace
