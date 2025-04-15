@@ -43,16 +43,16 @@ func Help() {
 		{"delete doc <id>", common.T("help.deleteDoc")},
 		{"delete user <id>", common.T("help.deleteUser")},
 		{"delete workspace <id>", common.T("help.deleteWorkspace")},
-		{"get doc <id> access", common.T("help.docAccess")},
+		{"[-o=json/table] get doc <id> access", common.T("help.docAccess")},
 		{"get doc <id> excel", common.T("help.docExportExcel")},
 		{"get doc <id> grist", common.T("help.docExportGrist")},
 		{"get doc <id> table <tableName>", common.T("help.docExportCsv")},
-		{"get doc <id>", common.T("help.docDesc")},
-		{"get org <id>", common.T("help.orgDesc")},
-		{"get org", common.T("help.orgList")},
+		{"[-o=json/table] get doc <id>", common.T("help.docDesc")},
+		{"[-o=json/table] get org <id>", common.T("help.orgDesc")},
+		{"[-o=json/table] get org", common.T("help.orgList")},
 		{"get users", common.T("help.userList")},
-		{"get workspace <id> access", common.T("help.workspaceAccess")},
-		{"get workspace <id>", common.T("help.workspaceDesc")},
+		{"[-o=json/table] get workspace <id> access", common.T("help.workspaceAccess")},
+		{"[-o=json/table] get workspace <id>", common.T("help.workspaceDesc")},
 		{"import users", common.T("help.userImport")},
 		{"purge doc <id> [<number of states to keep>]", common.T("help.docPurge")},
 		{"version", common.T("help.version")},
@@ -472,7 +472,6 @@ func DisplayOrg(orgId string) {
 				fmt.Println(string(jsonData))
 			}
 		}
-
 	}
 }
 
@@ -724,10 +723,8 @@ func DisplayDocAccess(docId string) {
 				}
 				table.Render()
 			}
-
 		}
 	}
-
 }
 
 // Displaying the rights matrix
@@ -774,18 +771,32 @@ func DisplayUserMatrix() {
 			}
 		}
 	}
-	accessDf := dataframe.LoadStructs(lstUserAccess)
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Id", "Email", "Name", "Org Id", "Org name", "Wokspace id", "Workspace name", "ParentAccess", "DirectAccess", "Access"})
-	for email, access := range accessDf.Arrange(dataframe.Sort("Email")).GroupBy("Email").GetGroups() {
-		for id, val := range access.Records() {
-			if id > 0 {
-				line := []string{val[3], email, val[4], val[5], val[6], val[8], val[9], val[7], val[1], val[0]}
-				table.Append(line)
+
+	switch output {
+	case "json":
+		{
+			jsonData, err := json.MarshalIndent(lstUserAccess, "", "   ")
+			if err != nil {
+				fmt.Println(err)
 			}
+			fmt.Println(string(jsonData))
+		}
+	case "table":
+		{
+			accessDf := dataframe.LoadStructs(lstUserAccess)
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"Id", "Email", "Name", "Org Id", "Org name", "Wokspace id", "Workspace name", "ParentAccess", "DirectAccess", "Access"})
+			for email, access := range accessDf.Arrange(dataframe.Sort("Email")).GroupBy("Email").GetGroups() {
+				for id, val := range access.Records() {
+					if id > 0 {
+						line := []string{val[3], email, val[4], val[5], val[6], val[8], val[9], val[7], val[1], val[0]}
+						table.Append(line)
+					}
+				}
+			}
+			table.Render()
 		}
 	}
-	table.Render()
 }
 
 // Delete a workspace
