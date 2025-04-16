@@ -16,11 +16,9 @@ SPDX-License-Identifier: MIT
 **gristctl** is a command-line utility designed for interacting with Grist. It allows users to automate and manage tasks related to Grist documents, including creating, updating, listing, deleting documents, and retrieving data from them.
 
 <div align="center">
-    
-[Installation](#installation) • 
-[Configuration](#configuration) • 
+[Installation](#installation) •
+[Configuration](#configuration) •
 [Usage](#usage)
-
 </div>
 
 ## Installation
@@ -33,11 +31,9 @@ Download exec files from [release](https://github.com/Ville-Eurometropole-Strasb
 
 <details>
    <summary>Windows</summary>
-   
    > That means you can either:
    > - copy the `gristctl.exe` into a directory that is in your PATH
    > - add the directory that contains `gristctl.exe` in your PATH environment variable
-
 </details>
 
 ### Installing from Source
@@ -75,21 +71,17 @@ To install `gristctl` from source:
 
 <details>
    <summary>Windows</summary>
-   
    > That means you can either:
    > - copy the `gristctl.exe` into a directory that is in your PATH
    > - add the directory that contains `gristctl.exe` in your PATH environment variable
-
 </details>
 
 <details>
    <summary>Linux/macOS</summary>
-    
    > Exemple:
    > ```bash
    > sudo mv gristctl /usr/local/bin/
    > ```
->    
 </details>
 
 ## Configuration
@@ -129,13 +121,13 @@ GRIST_URL="https://<GRIST server URL, without /api>"
 
 Command structure :
 
-```
+```bash
 gristctl [<options>] <command>
 ````
 
-Example : 
+Example :
 
-```
+```bash
 gristctl -o=json get org
 ```
 
@@ -182,9 +174,11 @@ $ gristctl get org
 ```
 
 To export as JSON:
+
 ```bash
-$ gristctl -o=json get org
+gristctl -o=json get org
 ```
+
 ```json
 [
    {
@@ -225,7 +219,7 @@ Contains 30 workspaces :
 To export as JSON:
 
 ```bash
-$ gristctl -o=json get org 3
+gristctl -o=json get org 3
 ```
 
 ```json
@@ -251,8 +245,6 @@ $ gristctl -o=json get org 3
 }
 ```
 
-
-
 ### Describe a workspace
 
 To fetch data from a Grist workspace with ID 676, including the list of his documents:
@@ -274,7 +266,7 @@ Contains 5 documents :
 To export as JSON:
 
 ```bash
-$ gristctl -o=json get workspace 676
+gristctl -o=json get workspace 676
 ```
 
 ```json
@@ -300,7 +292,6 @@ $ gristctl -o=json get workspace 676
 }
 ```
 
-
 ### View workspace access rights
 
 ```bash
@@ -323,7 +314,7 @@ Accessible to the following users :
 To export as JSON:
 
 ```bash
-$ gristctl -o=json get workspace 676 access
+gristctl -o=json get workspace 676 access
 ```
 
 ```json
@@ -352,8 +343,6 @@ $ gristctl -o=json get workspace 676 access
    ]
 }
 ```
-
-
 
 ### Delete a workspace
 
