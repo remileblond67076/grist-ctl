@@ -374,10 +374,12 @@ foreach ($grp in ('a', 'u')) {
 ```
 
 ```bash
-cat ga_grist_pu.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Direction-"$2";viewers"}' | gristctl import users
-cat ga_grist_pu.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Service-"$3";viewers"}' | gristctl import users
-cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Direction-"$2";editors"}' | gristctl import users
-cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;Service-"$3";editors"}' | gristctl import users
+dos2unix ga_grist_pu.csv
+dos2unix ga_grist_pa.csv
+cat ga_grist_pu.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;"$2" : Commun;viewers"}' | gristctl import users
+cat ga_grist_pu.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;"$2"/"$3" : Commun;viewers"}' | gristctl import users
+cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;"$2" : Commun;editors"}' | gristctl import users
+cat ga_grist_pa.csv | awk -F',' 'NR>1 {gsub(/"/, "", $0); print tolower($1)";3;"$2"/"$3" : Commun;editors"}' | gristctl import users
 ```
 
 ## Contributing
