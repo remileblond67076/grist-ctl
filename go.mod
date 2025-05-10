@@ -5,6 +5,7 @@
 module gristctl
 
 go 1.23.3
+
 toolchain go1.24.1
 
 require (
@@ -15,7 +16,7 @@ require (
 	github.com/muesli/termenv v0.15.2
 	github.com/nicksnyder/go-i18n/v2 v2.5.1
 	github.com/olekukonko/tablewriter v0.0.5
-	golang.org/x/text v0.22.0
+	golang.org/x/text v0.23.0
 )
 
 require (
@@ -24,7 +25,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	golang.org/x/net v0.36.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 	gonum.org/v1/gonum v0.15.1 // indirect
 )
