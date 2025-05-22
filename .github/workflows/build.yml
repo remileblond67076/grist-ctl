@@ -48,6 +48,7 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            artifacts/*
+            exec_files.zip 
+            exec_files.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
