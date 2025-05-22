@@ -712,7 +712,7 @@ func DisplayDocAccess(docId string) {
 		case "table":
 			{
 				// Displaying the document name
-				title := fmt.Sprintf("Workspace \"%s\" (n°%d), document \"%s\"", myDocAccess.WorkspaceName, myDocAccess.DocId, myDocAccess.DocName)
+				title := fmt.Sprintf("Workspace \"%s\" (n°%s), document \"%s\"", myDocAccess.WorkspaceName, myDocAccess.DocId, myDocAccess.DocName)
 				common.DisplayTitle(title)
 				fmt.Println(myDocAccess.MaxInheritedRole)
 				fmt.Printf("\nDirect users:\n")
