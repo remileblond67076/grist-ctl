@@ -41,10 +41,13 @@ jobs:
           name: gristctl
           path: build/
       - name: Create Release
-        uses: ncipollo/release-action@cdcc88a9acf3ca41c16c37bb7d21b9ad48560d87 # v1.15.0
+        id: create_release
+        uses: softprops/action-gh-release@v1
         with:
-          artifacts: "exec_files.zip,exec_files.tar.gz"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
-          allowUpdates: true
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
