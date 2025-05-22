@@ -6,6 +6,7 @@
 package common
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -19,6 +20,9 @@ import (
 	"golang.org/x/text/language"
 )
 
+//go:embed translations/*.json
+var translations embed.FS
+
 var localizer *i18n.Localizer // Global localizer
 var bundle *i18n.Bundle       // Global bundle
 
@@ -30,10 +34,10 @@ func init() {
 	}
 
 	// Initialize i18n with English (default) and French languages
-	bundle = i18n.NewBundle(language.English)            // Default language
-	bundle.RegisterUnmarshalFunc("json", json.Unmarshal) // Register JSON unmarshal function
-	bundle.LoadMessageFile("locales/en.json")            // Load English messages
-	bundle.LoadMessageFile("locales/fr.json")            // Load French messages
+	bundle = i18n.NewBundle(language.English)                      // Default language
+	bundle.RegisterUnmarshalFunc("json", json.Unmarshal)           // Register JSON unmarshal function
+	bundle.LoadMessageFileFS(translations, "translations/en.json") // Load English messages
+	bundle.LoadMessageFileFS(translations, "translations/fr.json") // Load French messages
 
 	localizer = i18n.NewLocalizer(bundle, language.Tag.String(tag)) // Initialize localizer with detected language
 }
