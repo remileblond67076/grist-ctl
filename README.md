@@ -354,13 +354,36 @@ gristctl delete workspace 676
 
 ### Import users from an ActiveDirectory directory
 
-Extract the list of members of AD groups GA_GRIST_PU and GA_GRIST_PA :
+Extract the list of members of AD groups GA_GRIST_PU and GA_GRIST_PA and create corresponding users and workspaces in PowerShell :
 
 ```powershell
-foreach ($grp in ('a', 'u')) {
-    get-adgroupmember ga_grist_p$grp | get-aduser -properties mail, extensionAttribute6, extensionAttribute15 |select-object mail, extensionAttribute6, extensionAttribute15 | export-csv -Path ga_grist_p$grp.csv -NoTypeInformation -Encoding:UTF8
+$orgId = 3
+$profiles = @{
+   "a"="editors";
+   "u"="viewers"
+}
+foreach ($grp in $profiles.keys) {
+   $lstUsers = @()
+   $profile = $profiles[$grp]
+   Write-Output "Export des $profile" 
+   $users = get-adgroupmember ga_grist_p$grp | get-aduser -properties mail, extensionAttribute6, extensionAttribute15 |select-object mail, extensionAttribute6, extensionAttribute15
+
+   $users | ForEach-Object {
+        $mail = $_.mail.tolower()
+        $dir = $_.extensionAttribute6.toupper()
+        $svc = $_.extensionAttribute15.toupper()
+        
+        if ($mail -and $dir -and $svc) {
+          $lstUsers += "$mail;$orgId;$dir : Commun;$profile"
+          $lstUsers += "$mail;$orgId;$dir/$svc : Commun;$profile"
+        }
+    }
+    write-output "Import des $profile"
+    write-output $lstUsers | ./gristctl import users
 }
 ```
+
+#### Example in bash
 
 ```bash
 dos2unix ga_grist_pu.csv
