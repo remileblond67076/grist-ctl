@@ -115,8 +115,20 @@ func main() {
 							gristtools.Help()
 						}
 					}
-				case "users":
-					gristtools.DisplayUserMatrix()
+				case "user":
+					{
+						switch len(args) {
+						case 2:
+							gristtools.DisplayUserMatrix()
+						case 3:
+							userId, err := strconv.Atoi(args[2])
+							if err == nil {
+								gristtools.DisplayUser(userId)
+							}
+						default:
+							gristtools.Help()
+						}
+					}
 				default:
 					gristtools.Help()
 				}

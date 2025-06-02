@@ -29,6 +29,26 @@ type User struct {
 	ParentAccess string `json:"parentAccess"`
 }
 
+type ScimUser struct {
+	Schemas []string `json:"schemas"`
+	Id      int      `json:"id"`
+	Meta    struct {
+		ResourceType string `json:"resourceType"`
+		Location     string `json:"location"`
+	} `json:"meta"`
+	UserName string `json:"userName"`
+	Name     struct {
+		Formatted string `json:"formatted"`
+	} `json:"name"`
+	DisplayName       string `json:"displayName"`
+	PreferredLanguage string `json:"preferredLanguage"`
+	Locale            string `json:"locale"`
+	Emails            []struct {
+		Value   string `json:"value"`
+		Primary bool   `json:"primary"`
+	} `json:"emails"`
+}
+
 // Grist's Organization
 type Org struct {
 	Id        int    `json:"id"`
@@ -327,6 +347,34 @@ func GetDocAccess(docId string) EntityAccess {
 	return lstUsers
 }
 
+// Get user information from id
+func GetUser(userId int) ScimUser {
+	user := ScimUser{}
+	url := fmt.Sprintf("scim/v2/Users/%d", userId)
+	response, status := httpGet(url, "")
+	if status == http.StatusOK {
+		json.Unmarshal([]byte(response), &user)
+	}
+	return user
+}
+
+// Get user list
+func GetUsers() []ScimUser {
+	users := []ScimUser{}
+	url := fmt.Sprintf("scim/v2/Users")
+	response, status := httpGet(url, "")
+	if status == http.StatusOK {
+		var result struct {
+			Resources []ScimUser `json:"Resources"`
+		}
+		json.Unmarshal([]byte(response), &result)
+		users = result.Resources
+	} else {
+		fmt.Printf("Unable to retrieve users: %s\n", response)
+	}
+	return users
+}
+
 // Purge a document's history, to retain only the last modifications
 func PurgeDoc(docId string, nbHisto int) {
 	url := "docs/" + docId + "/states/remove"
@@ -350,6 +398,7 @@ func ImportUsers(orgId int, workspaceName string, users []UserRole) {
 
 	if idWorkspace == 0 {
 		idWorkspace = CreateWorkspace(orgId, workspaceName)
+		fmt.Printf("Workspace '%s' created with id %d\n", workspaceName, idWorkspace)
 	}
 	if idWorkspace == 0 {
 		fmt.Printf("Unable to create workspace %s\n", workspaceName)

@@ -50,7 +50,8 @@ func Help() {
 		{"[-o=json/table] get doc <id>", common.T("help.docDesc")},
 		{"[-o=json/table] get org <id>", common.T("help.orgDesc")},
 		{"[-o=json/table] get org", common.T("help.orgList")},
-		{"[-o=json/table] get users", common.T("help.userList")},
+		{"[-o=json/table] get user <id>", common.T("help.userDesc")},
+		{"[-o=json/table] get user", common.T("help.userList")},
 		{"[-o=json/table] get workspace <id> access", common.T("help.workspaceAccess")},
 		{"[-o=json/table] get workspace <id>", common.T("help.workspaceDesc")},
 		{"import users", common.T("help.userImport")},
@@ -164,17 +165,20 @@ CSV input file has to be formatied with the following columns, separated with ';
 Missing workspaces will be created on import.
 */
 func ImportUsers() {
-	common.DisplayTitle("Import users from stdin")
-	fmt.Println("Expected data format : <mail>;<org id>;<workspace name>;<role>")
-
-	scanner := bufio.NewScanner(os.Stdin)
 	type userAccess struct {
 		Mail          string
 		OrgId         int
 		WorkspaceName string
 		Role          string
 	}
-	lstUserAccess := []userAccess{}
+
+	common.DisplayTitle("Import users from stdin")
+	fmt.Println("Expected data format : <mail>;<org id>;<workspace name>;<role>")
+
+	scanner := bufio.NewScanner(os.Stdin)
+	lstUserAccess := []userAccess{} // List of user access to be imported
+
+	// Read lines from standard input
 	for scanner.Scan() {
 		line := scanner.Text()
 		data := strings.Split(line, ";")
@@ -193,7 +197,9 @@ func ImportUsers() {
 			newUserAccess.OrgId = orgId
 			newUserAccess.WorkspaceName = data[2]
 			newUserAccess.Role = data[3]
+
 			if lineOk {
+				// Adding the new user access to the list
 				lstUserAccess = append(lstUserAccess, newUserAccess)
 			} else {
 				fmt.Printf("ERROR : badly formatted line : %s\n", line)
@@ -206,9 +212,13 @@ func ImportUsers() {
 	if scanner.Err() != nil {
 		fmt.Println("Standard input read error")
 	}
+
+	// Converting the list of user access to a dataframe
 	usersDf := dataframe.LoadStructs(lstUserAccess)
 
+	// List of workspaces to be treated
 	workspaces := usersDf.GroupBy("OrgId", "WorkspaceName")
+
 	for group, users := range workspaces.GetGroups() {
 		var roles []gristapi.UserRole
 		line := strings.Split(group, "_")
@@ -374,11 +384,11 @@ func DisplayOrgs() {
 	sort.Slice(lstOrgs, func(i, j int) bool {
 		return strings.ToLower(lstOrgs[i].Name) < strings.ToLower(lstOrgs[j].Name)
 	})
-	table := tablewriter.NewWriter(os.Stdout)
 
 	switch output {
 	case "table":
 		{
+			table := tablewriter.NewWriter(os.Stdout)
 			table.SetHeader([]string{common.T("col.ident"), common.T("col.name")})
 			for _, org := range lstOrgs {
 				table.Append([]string{strconv.Itoa(org.Id), org.Name})
@@ -394,6 +404,66 @@ func DisplayOrgs() {
 			fmt.Println(string(jsonOrgs))
 		}
 	}
+}
+
+// Displays details about a specific user
+func DisplayUser(userId int) {
+	user := gristapi.GetUser(userId)
+
+	switch output {
+	case "table":
+		{
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{common.T("table.field"), common.T("table.value")})
+			table.Append([]string{common.T("user.ident"), strconv.Itoa(userId)})
+			table.Append([]string{common.T("user.displayName"), user.DisplayName})
+			table.Append([]string{common.T("user.name"), user.UserName})
+			table.Append([]string{common.T("user.locale"), user.Locale})
+			table.Append([]string{common.T("user.preferredLanguage"), user.PreferredLanguage})
+			table.Render()
+		}
+	case "json":
+		{
+			jsonUser, err := json.MarshalIndent(user, "", "  ")
+			if err != nil {
+				fmt.Println("ERROR :", err)
+			} else {
+				fmt.Println(string(jsonUser))
+			}
+		}
+	}
+}
+
+// Displays the list of users with access to the Grist instance
+func DisplayUsers() {
+	// Getting the list of users
+	lstUsers := gristapi.GetUsers()
+	fmt.Println("Nb users :", len(lstUsers))
+	// Sorting the list of users by email (lowercase)
+	// sort.Slice(lstUsers, func(i, j int) bool {
+	// 	return strings.ToLower(lstUsers[i].Email) < strings.ToLower(lstUsers[j].Email)
+	// })
+
+	// switch output {
+	// case "table":
+	// 	{
+	// 		table := tablewriter.NewWriter(os.Stdout)
+	// 		table.SetHeader([]string{common.T("col.ident"), common.T("col.email"), common.T("col.name")})
+	// 		for _, user := range lstUsers {
+	// 			table.Append([]string{strconv.Itoa(user.Id), user.Email, user.Name})
+	// 		}
+	// 		table.Render()
+	// 	}
+	// case "json":
+	// 	{
+	// 		jsonUsers, err := json.MarshalIndent(lstUsers, "", "  ")
+	// 		if err != nil {
+	// 			fmt.Println("ERROR :", err)
+	// 		} else {
+	// 			fmt.Println(string(jsonUsers))
+	// 		}
+	// 	}
+	// }
 }
 
 // Displays details about an organization
@@ -815,6 +885,19 @@ func DeleteDoc(docId string) {
 
 // Delete a user
 func DeleteUser(userId int) {
+	// Check if the user exists
+	user := gristapi.GetUser(userId)
+	if user.Name.Formatted == "" {
+		// User was not found
+		fmt.Printf("❗️ User %d not found ❗️\n", userId)
+		return
+	} else {
+		// User was found
+		DisplayUser(userId)
+		// Ask for confirmation
+		fmt.Println("⚠️  Warning :")
+		fmt.Printf("User %d will be deleted\n", user.Id)
+	}
 	if common.Confirm(fmt.Sprintf("Do you really want to delete user %d ?", userId)) {
 		gristapi.DeleteUser(userId)
 	}

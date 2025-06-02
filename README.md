@@ -15,11 +15,11 @@ SPDX-License-Identifier: MIT
 
 **gristctl** is a command-line utility designed for interacting with Grist. It allows users to automate and manage tasks related to Grist documents, including creating, updating, listing, deleting documents, and retrieving data from them.
 
-<div align="center">
-[Installation](#installation) •
-[Configuration](#configuration) •
-[Usage](#usage)
-</div>
+<p align="center">
+  <a href="#installation">Installation</a> •
+  <a href="#configuration">Configuration</a> •
+  <a href="#usage">Usage</a>
+</p>
 
 ## Installation
 
@@ -152,7 +152,8 @@ gristctl -o=json get org
 | `get doc <id> table <tableName>`              | export content of a document's table as a CSV file (xlsx) in stdout |
 | `[-o=json/table] get org <id>`                | organization details                                                |
 | `[-o=json/table] get org`                     | organization list                                                   |
-| `[-o=json/table] get users`                   | displays all user rights                                            |
+| `[-o=json/table] get user`                    | displays all users                                                  |
+| `[-o=json/table] get user <id>`               | displays user informations                                          |
 | `[-o=json/table] get workspace <id> access`   | list of workspace access rights                                     |
 | `[-o=json/table] get workspace <id>`          | workspace details                                                   |
 | `import users`                                | imports users from standard input                                   |

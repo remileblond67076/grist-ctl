@@ -39,6 +39,7 @@
         "docPurge": "purger l'historique d'un document (en conservant par défaut les 3 dernières opérations)",
         "orgDesc": "afficher la description de l'organisation",
         "orgList": "lister des organisations",
+        "userDesc": "afficher la description d'un utilisateur",
         "userImport": "importer des utilisateurs depuis l'entrée standard",
         "userList": "lister des utilisateurs avec leurs rôles",
         "version": "afficher la version du programme",
@@ -62,6 +63,19 @@
         "quit": "quitter",
         "y": "o",
         "yes": "Oui"
+    },
+    "table": {
+        "field": "Champ",
+        "value": "Valeur"
+    },
+    "user": {
+        "displayName": "Nom d'affichage",
+        "email": "Courriel",
+        "ident": "Identifiant",
+        "locale": "Langue",
+        "name": "Nom",
+        "preferredLanguage": "Langue préférée",
+        "type": "Utilisateur"
     },
     "workspace": {
         "contains": "Contient {{.nb}} document(s)",

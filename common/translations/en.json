@@ -40,6 +40,7 @@
         "orgList": "list of organizations",
         "userImport": "import users from stdin",
         "userList": "list of users with their roles",
+        "userDesc": "user description",
         "version": "displays the version of the program",
         "workspaceAccess": "list of users with access to the workspace",
         "workspaceDesc": "workspace description"
@@ -61,6 +62,19 @@
         "quit": "quit",
         "y": "y",
         "yes": "yes"
+    },
+    "table": {
+        "field": "Field",
+        "value": "Value"
+    },
+    "user": {
+        "displayName": "Displayname",
+        "email": "Email",
+        "ident": "ID",
+        "locale": "Locale",
+        "name": "Name",
+        "preferredLanguage": "Preferred language",
+        "type": "User"
     },
     "workspace": {
         "contains": "Contains {{.nb}} document(s)",
