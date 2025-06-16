@@ -370,14 +370,19 @@ foreach ($grp in $profiles.keys) {
    $users = get-adgroupmember ga_grist_p$grp | get-aduser -properties mail, extensionAttribute6, extensionAttribute15 |select-object mail, extensionAttribute6, extensionAttribute15
 
    $users | ForEach-Object {
-        $mail = $_.mail.tolower()
-        $dir = $_.extensionAttribute6.toupper()
-        $svc = $_.extensionAttribute15.toupper()
-        
-        if ($mail -and $dir -and $svc) {
-          $lstUsers += "$mail;$orgId;$dir : Commun;$profile"
-          $lstUsers += "$mail;$orgId;$dir/$svc : Commun;$profile"
-        }
+      if (-not $_.mail) {
+            Write-Output "No mail for user $($_.samaccountname), skipping"
+            return
+      } else {
+         $mail = $_.mail.tolower()
+         $dir = $_.extensionAttribute6.toupper()
+         $svc = $_.extensionAttribute15.toupper()
+         
+         if ($mail -and $dir -and $svc) {
+            $lstUsers += "$mail;$orgId;$dir : Commun;$profile"
+            $lstUsers += "$mail;$orgId;$dir/$svc : Commun;$profile"
+         }
+      }
     }
     write-output "Import des $profile"
     write-output $lstUsers | ./gristctl import users

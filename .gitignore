@@ -9,3 +9,4 @@ gristctl
 gristctl.exe
 .DS_Store
 .gitlab-ci.yml
+cover.out
